@@ -88,16 +88,12 @@ bool LoadOBJ(const std::string& filename, std::vector<Mesh>& outMeshes, std::vec
                     vertex.normal.x = attrib.normals[3 * size_t(idx.normal_index) + 0];
                     vertex.normal.y = attrib.normals[3 * size_t(idx.normal_index) + 1];
                     vertex.normal.z = attrib.normals[3 * size_t(idx.normal_index) + 2];
-                } else {
-                    vertex.normal = glm::vec3(0.0f);
-                }
+                } 
 
                 if (idx.texcoord_index >= 0) {
                     vertex.texCoords.x = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
                     vertex.texCoords.y = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
-                } else {
-                    vertex.texCoords = glm::vec2(0.0f);
-                }
+                } 
 
                 mesh.vertices.push_back(vertex);
             }
