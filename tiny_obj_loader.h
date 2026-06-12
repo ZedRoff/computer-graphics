@@ -8532,7 +8532,7 @@ static bool LoadMtlInternal(std::map<std::string, int> *material_map,
     }
 
     // diffuse texture
-    if (sr.match("map_Kd", 6) && (sr.peek_at(6) == ' ' || sr.peek_at(6) == '\t')) {
+    if (sr.match("map_kd", 6) && (sr.peek_at(6) == ' ' || sr.peek_at(6) == '\t')) {
       sr.advance(7);
       std::string line_rest = trimTrailingWhitespace(sr.read_line());
       ParseTextureNameAndOption(&(material.diffuse_texname),

@@ -15,6 +15,9 @@ struct Material {
     Vec3 diffuse;
     Vec3 specular;
     float shininess = 0.0f;
+
+    std::string texturePath;
+    unsigned int textureID = 0;
 };
 
 struct Mesh {

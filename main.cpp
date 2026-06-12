@@ -7,6 +7,10 @@
 #include "Structures.h"
 #include "Utils.h"
 
+std::vector<Mesh> meshes;
+std::vector<Material> materials;
+unsigned int shaderProgram;
+
 int main(int argc, char* argv[]) {
     glfwInit();
 
@@ -24,18 +28,38 @@ int main(int argc, char* argv[]) {
 
     glEnable(GL_DEPTH_TEST);
 
-    std::vector<Mesh> meshes;
-    std::vector<Material> materials;
-
-    LoadOBJ("hand.obj", meshes, materials);
+    LoadOBJ("./3Dobjects/GoingMerry/GoingMerry.obj", meshes, materials);
     SetupMeshBuffers(meshes);
-   
 
-    unsigned int shaderProgram = CreateShaderFromFiles("shaders/vertex_shader.glsl", "shaders/fragment_shader.glsl");
+    Vec3 objCenter(0.0f, 0.0f, 0.0f);
+    float objMaxDim = 0.0f;
+    ComputeBoundingBox(meshes, objCenter, objMaxDim);
 
-    Mat4 modelMatrix; 
-    Mat4 viewMatrix  = Translate(7.0f, 18.0f, -25.0f);
-    Mat4 projMatrix  = Perspective(M_PI / 4, 800.0f / 600.0f, 0.1f, 500.0f);
+    std::cout << "--- AUTO FRAMING ---" << std::endl;
+    std::cout << "Centre de l'objet : (" << objCenter.x << ", " << objCenter.y << ", " << objCenter.z << ")" << std::endl;
+    std::cout << "Dimension maximale : " << objMaxDim << std::endl;
+
+    shaderProgram = CreateShaderFromFiles("shaders/vertex_shader.glsl", "shaders/fragment_shader.glsl");
+
+    // BOUCLE AUTOMATIQUE DE CHARGEMENT DES PNG
+    for (size_t i = 0; i < materials.size(); i++)
+    {
+        // Si tiny_obj_loader a trouvé un nom de fichier dans "map_kd"
+        if (!materials[i].texturePath.empty())
+        {
+            // On appelle notre fonction pour l'envoyer à la carte graphique
+            materials[i].textureID = LoadTexture(materials[i].texturePath);
+        }
+    }
+
+    float fov = M_PI / 4.0f;
+    float aspect = 800.0f / 600.0f;
+    float cameraDistance = (objMaxDim * 0.5f) / std::tan(fov * 0.5f) * 1.2f;
+    Mat4 modelMatrix = Translate(-objCenter.x, -objCenter.y, -objCenter.z);    
+    Mat4 viewMatrix = Translate(0.0f, 0.0f, -cameraDistance);
+    float zNear = 0.1f;
+    float zFar  = cameraDistance + objMaxDim * 2.0f;
+    Mat4 projMatrix  = Perspective(fov, aspect, zNear, zFar);
     
     Mat4 mvpMatrix = Multiply(projMatrix, Multiply(viewMatrix, modelMatrix));
 
@@ -48,14 +72,30 @@ int main(int argc, char* argv[]) {
         unsigned int mvpLoc = glGetUniformLocation(shaderProgram, "u_MVP");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvpMatrix.m[0]);
 
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, 0.7f, 0.7f, 1.0f);
+        int vertexColorLocation = glGetUniformLocation(shaderProgram, "u_diffuseColor");
+        int useTextureLocation = glGetUniformLocation(shaderProgram, "u_Texture");
+        glUniform1i(useTextureLocation, 0);
 
         for (size_t i = 0; i < meshes.size(); i++) {
+            int matID = meshes[i].materialId;
+            glActiveTexture(GL_TEXTURE0);
+            if (matID >= 0 && matID < materials.size()) {
+                glUniform3f(vertexColorLocation, materials[matID].diffuse.x, materials[matID].diffuse.y, materials[matID].diffuse.z);
+                if (materials[matID].textureID != 0) {
+                    glBindTexture(GL_TEXTURE_2D, materials[matID].textureID);
+                } else {
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                }
+            } else {
+                // Couleur grise de secours si la pièce n'a pas de matériau défini
+                glUniform3f(vertexColorLocation, 0.6f, 0.6f, 0.6f);
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
             glBindVertexArray(meshes[i].VAO);
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(meshes[i].vertices.size()));
         }
         glBindVertexArray(0);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
