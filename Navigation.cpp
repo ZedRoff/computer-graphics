@@ -12,7 +12,6 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 }
 
 void SetupScrollCallback(GLFWwindow* window, Camera& camera) {
-  
     g_cameraPtr = &camera;
     glfwSetScrollCallback(window, scroll_callback);
 }
