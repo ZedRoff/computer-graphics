@@ -9,7 +9,7 @@ all: compile run
 
 compile:
 	@mkdir -p bin
-	$(CC) $(CFLAGS) main.cpp Utils.cpp Navigation.cpp tiny_obj_loader.cc -o bin/projet $(LDFLAGS)
+	$(CC) $(CFLAGS) main.cpp Utils.cpp Navigation.cpp Maths.cpp tiny_obj_loader.cc -o bin/projet $(LDFLAGS)
 
 run:
 	./bin/projet
