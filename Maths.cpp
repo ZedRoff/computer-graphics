@@ -67,8 +67,39 @@ inline Mat4 Perspective(float fov, float aspect, float near, float far) {
     
     return mat;
 }
-Mat4 Identity();
-Mat4 RotateX(float angleRadians);
-Mat4 RotateY(float angleRadians);
+// 1. Crée la matrice Identité (Diagonale de 1, le reste à 0)
+Mat4 Identity() {
+    Mat4 matrix;
+    for (int i = 0; i < 16; ++i) matrix.m[i] = 0.0f;
+    matrix.m[0] = 1.0f;  // Ligne 1, Col 1
+    matrix.m[5] = 1.0f;  // Ligne 2, Col 2
+    matrix.m[10] = 1.0f; // Ligne 3, Col 3
+    matrix.m[15] = 1.0f; // Ligne 4, Col 4
+    return matrix;
+}
+
+// Rotation autour de l'axe X (pour regarder vers le haut/bas)
+Mat4 RotateX(float angleRadians) {
+    Mat4 matrix = Identity(); // Démarre avec une matrice identité (diagonale de 1)
+    float c = std::cos(angleRadians);
+    float s = std::sin(angleRadians);
+
+    matrix.m[5]  = c;  matrix.m[6]  = s;
+    matrix.m[9]  = -s; matrix.m[10] = c;
+    
+    return matrix;
+}
+
+// Rotation autour de l'axe Y (pour tourner autour du bateau à gauche/droite)
+Mat4 RotateY(float angleRadians) {
+    Mat4 matrix = Identity();
+    float c = std::cos(angleRadians);
+    float s = std::sin(angleRadians);
+
+    matrix.m[0]  = c; matrix.m[2]  = -s;
+    matrix.m[8]  = s; matrix.m[10] = c;
+    
+    return matrix;
+}
 
 #endif

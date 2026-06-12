@@ -6,6 +6,7 @@
 #include "Maths.h"
 #include "Structures.h"
 #include "Utils.h"
+#include "Navigation.h"
 
 std::vector<Mesh> meshes;
 std::vector<Material> materials;
@@ -35,10 +36,6 @@ int main(int argc, char* argv[]) {
     float objMaxDim = 0.0f;
     ComputeBoundingBox(meshes, objCenter, objMaxDim);
 
-    std::cout << "--- AUTO FRAMING ---" << std::endl;
-    std::cout << "Centre de l'objet : (" << objCenter.x << ", " << objCenter.y << ", " << objCenter.z << ")" << std::endl;
-    std::cout << "Dimension maximale : " << objMaxDim << std::endl;
-
     shaderProgram = CreateShaderFromFiles("shaders/vertex_shader.glsl", "shaders/fragment_shader.glsl");
 
     // BOUCLE AUTOMATIQUE DE CHARGEMENT DES PNG
@@ -62,6 +59,11 @@ int main(int argc, char* argv[]) {
     Mat4 projMatrix  = Perspective(fov, aspect, zNear, zFar);
     
     Mat4 mvpMatrix = Multiply(projMatrix, Multiply(viewMatrix, modelMatrix));
+
+    Camera camera;
+    camera.radius = cameraDistance; 
+    SetupScrollCallback(window, camera);
+
 
     while (!glfwWindowShouldClose(window)) {
         glClearColor(1.f, 1.f, 1.f, 1.0f);
