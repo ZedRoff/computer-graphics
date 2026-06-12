@@ -38,38 +38,46 @@ int main(int argc, char* argv[]) {
 
     shaderProgram = CreateShaderFromFiles("shaders/vertex_shader.glsl", "shaders/fragment_shader.glsl");
 
-    // BOUCLE AUTOMATIQUE DE CHARGEMENT DES PNG
     for (size_t i = 0; i < materials.size(); i++)
     {
-        // Si tiny_obj_loader a trouvé un nom de fichier dans "map_kd"
         if (!materials[i].texturePath.empty())
         {
-            // On appelle notre fonction pour l'envoyer à la carte graphique
             materials[i].textureID = LoadTexture(materials[i].texturePath);
         }
     }
 
     float fov = M_PI / 4.0f;
     float aspect = 800.0f / 600.0f;
-    float cameraDistance = (objMaxDim * 0.5f) / std::tan(fov * 0.5f) * 1.2f;
-    Mat4 modelMatrix = Translate(-objCenter.x, -objCenter.y, -objCenter.z);    
-    Mat4 viewMatrix = Translate(0.0f, 0.0f, -cameraDistance);
     float zNear = 0.1f;
+    float cameraDistance = (objMaxDim * 0.5f) / std::tan(fov * 0.5f) * 1.2f;
     float zFar  = cameraDistance + objMaxDim * 2.0f;
-    Mat4 projMatrix  = Perspective(fov, aspect, zNear, zFar);
-    
-    Mat4 mvpMatrix = Multiply(projMatrix, Multiply(viewMatrix, modelMatrix));
 
     Camera camera;
     camera.radius = cameraDistance; 
+    camera.yaw = 0.0f;
+    camera.pitch = 0.0f;
+    camera.isMousePressed = false;
+
     SetupScrollCallback(window, camera);
 
+
+    Mat4 projMatrix  = Perspective(fov, aspect, zNear, zFar);
+    Mat4 modelMatrix = Translate(-objCenter.x, -objCenter.y, -objCenter.z);    
+
+    float dummyX, dummyY, dummyZ;
 
     while (!glfwWindowShouldClose(window)) {
         glClearColor(1.f, 1.f, 1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
+
+        glfwPollEvents();
+
+        UpdateCameraFromInputs(window, camera, dummyX, dummyY, dummyZ);
+
+        Mat4 viewMatrix = ComputeViewMatrix(camera);
+        Mat4 mvpMatrix  = Multiply(projMatrix, Multiply(viewMatrix, modelMatrix));
 
         unsigned int mvpLoc = glGetUniformLocation(shaderProgram, "u_MVP");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvpMatrix.m[0]);
@@ -89,7 +97,6 @@ int main(int argc, char* argv[]) {
                     glBindTexture(GL_TEXTURE_2D, 0);
                 }
             } else {
-                // Couleur grise de secours si la pièce n'a pas de matériau défini
                 glUniform3f(vertexColorLocation, 0.6f, 0.6f, 0.6f);
                 glBindTexture(GL_TEXTURE_2D, 0);
             }
@@ -100,7 +107,6 @@ int main(int argc, char* argv[]) {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 
     glDeleteProgram(shaderProgram);
