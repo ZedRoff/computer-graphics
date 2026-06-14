@@ -10,6 +10,8 @@
 #include "common/GLShader.h"
 #include "Navigation.h"
 
+ViewProj g_Camera;
+
 struct ObjectData {
     std::vector<Mesh> meshes;
     std::vector<Material> materials;
@@ -23,7 +25,6 @@ int currentObjectIndex = 0;
 
 bool rightArrowPressedLastFrame = false;
 bool leftArrowPressedLastFrame = false;
-
 
 void AddObjectToScene(const std::string& objPath, 
                       const std::string& mtlDir, 
@@ -39,6 +40,12 @@ void AddObjectToScene(const std::string& objPath,
     obj.shader.LoadVertexShader(vertPath.c_str());
     obj.shader.LoadFragmentShader(fragPath.c_str());
     obj.shader.Create(); 
+
+    uint32_t programID = obj.shader.GetProgram();
+    auto blockIndex = glGetUniformBlockIndex(programID, "ViewProj"); 
+    if (blockIndex != GL_INVALID_INDEX) {
+        glUniformBlockBinding(programID, blockIndex, cameraBindingPoint); 
+    }
     
     Vec3 center(0.0f, 0.0f, 0.0f);
     float maxDim = 0.0f;
@@ -71,7 +78,6 @@ int main(int argc, char* argv[]) {
     
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
-  
 
     glewExperimental = GL_TRUE;
     glewInit();
@@ -82,26 +88,35 @@ int main(int argc, char* argv[]) {
     float aspect = 800.0f / 600.0f;
     float zNear = 0.1f;
 
+    glGenBuffers(1, &g_Camera.UBO); 
+    glBindBuffer(GL_UNIFORM_BUFFER, g_Camera.UBO); 
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(Mat4) * 2, nullptr, GL_STREAM_DRAW); 
+    glBindBufferBase(GL_UNIFORM_BUFFER, cameraBindingPoint, g_Camera.UBO); 
+    glBindBuffer(GL_UNIFORM_BUFFER, 0); 
+
     AddObjectToScene("./3Dobjects/GoingMerry/GoingMerry.obj", 
                      "./3Dobjects/GoingMerry/", 
                      "shaders/GoingMerry/basic.vs.glsl", 
                      "shaders/GoingMerry/basic.fs.glsl", 
                      fov);
-     AddObjectToScene("./3Dobjects/laboon-one-piece/Laboon_One_Piece.obj", 
+    AddObjectToScene("./3Dobjects/laboon-one-piece/Laboon_One_Piece.obj", 
                      "./3Dobjects/laboon-one-piece/", 
                      "shaders/laboon-one-piece/basic.vs.glsl", 
                      "shaders/laboon-one-piece/basic.fs.glsl", 
                      fov);
 
-
-
-    Mat4 projMatrix = Perspective(fov, aspect, zNear, sceneObjects[0].zFar);
+     AddObjectToScene("./3Dobjects/one-piece-kuzan/Aokiji.obj", 
+                     "./3Dobjects/one-piece-kuzan/", 
+                     "shaders/one-piece-kuzan/basic.vs.glsl", 
+                     "shaders/one-piece-kuzan/basic.fs.glsl", 
+                     fov);
 
     Vec3 lightPos(5.0f, 10.0f, 5.0f);
     Vec3 lightColor(1.0f, 1.0f, 1.0f);
 
-    int lastObjectIndex = 0; 
+    int lastObjectIndex = -1; 
     radius = sceneObjects[0].cameraDistance;
+
     while (!glfwWindowShouldClose(window)) {
         glClearColor(1.f, 1.f, 1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -131,23 +146,23 @@ int main(int argc, char* argv[]) {
         ObjectData& currentObj = sceneObjects[currentObjectIndex];
 
         if (currentObjectIndex != lastObjectIndex) {
-            projMatrix = Perspective(fov, aspect, zNear, currentObj.zFar);
+            g_Camera.projectionMatrix = Perspective(fov, aspect, zNear, currentObj.zFar);
             lastObjectIndex = currentObjectIndex;
         }
+        
+        g_Camera.viewMatrix = LookAt();
+
+        glBindBuffer(GL_UNIFORM_BUFFER, g_Camera.UBO);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Mat4), &g_Camera.viewMatrix); 
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(Mat4), sizeof(Mat4), &g_Camera.projectionMatrix);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         uint32_t activeProgramID = currentObj.shader.GetProgram();
         glUseProgram(activeProgramID);
 
-     
+        glUniformMatrix4fv(glGetUniformLocation(activeProgramID, "u_Model"), 1, GL_FALSE, &currentObj.modelMatrix.m[0]); 
+
         Vec3 camPos = GetCameraPosition();
-        Mat4 viewMatrix = LookAt();
-        Mat4 mvpMatrix  = Multiply(projMatrix, Multiply(viewMatrix, currentObj.modelMatrix));
-
-
-        unsigned int mvpLoc = glGetUniformLocation(activeProgramID, "u_MVP");
-        glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvpMatrix.m[0]);
-        glUniformMatrix4fv(glGetUniformLocation(activeProgramID, "u_Model"), 1, GL_FALSE, &currentObj.modelMatrix.m[0]);
-
         glUniform3f(glGetUniformLocation(activeProgramID, "u_lightPos"), lightPos.x, lightPos.y, lightPos.z);
         glUniform3f(glGetUniformLocation(activeProgramID, "u_viewPos"), camPos.x, camPos.y, camPos.z);
         glUniform3f(glGetUniformLocation(activeProgramID, "u_lightColor"), lightColor.x, lightColor.y, lightColor.z);
@@ -197,6 +212,8 @@ int main(int argc, char* argv[]) {
     for (size_t i = 0; i < sceneObjects.size(); i++) {
         sceneObjects[i].shader.Destroy();
     }
+    glDeleteBuffers(1, &g_Camera.UBO);
+
     glfwTerminate();
     return 0;
 }
