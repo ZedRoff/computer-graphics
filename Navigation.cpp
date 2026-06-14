@@ -19,7 +19,7 @@ void SetupScrollCallback(GLFWwindow* window, Camera& camera) {
 void UpdateCameraFromInputs(GLFWwindow* window, Camera& camera, float& outCamX, float& outCamY, float& outCamZ) {
     double mouseX, mouseY;
     glfwGetCursorPos(window, &mouseX, &mouseY);
-    std::cout << "Position X : " << mouseX << std::endl;
+    
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         if (!camera.isMousePressed) {
             camera.lastX = mouseX;

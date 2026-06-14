@@ -45,9 +45,9 @@ unsigned int CreateShaderFromFiles(const std::string& vertexPath, const std::str
     return shaderProgram;
 }
 
-bool LoadOBJ(const std::string& filename, std::vector<Mesh>& outMeshes, std::vector<Material>& outMaterials) {
+bool LoadOBJ(const std::string& filename, std::vector<Mesh>& outMeshes, std::vector<Material>& outMaterials, const std::string& ext) {
     tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = "./3Dobjects/GoingMerry/";
+    reader_config.mtl_search_path = ext;
     reader_config.triangulate = true;        
 
     tinyobj::ObjReader reader;
@@ -66,7 +66,7 @@ bool LoadOBJ(const std::string& filename, std::vector<Mesh>& outMeshes, std::vec
         mat.specular = Vec3(materials[i].specular[0], materials[i].specular[1], materials[i].specular[2]);
         mat.shininess = materials[i].shininess;
         if (!materials[i].diffuse_texname.empty()) {
-        mat.texturePath = "./3Dobjects/GoingMerry/textures/" + materials[i].diffuse_texname;
+        mat.texturePath = ext + "/textures/" + materials[i].diffuse_texname;
         } else {
             mat.texturePath = "";
         }
@@ -194,7 +194,7 @@ unsigned int LoadTexture(const std::string& path) {
         glGenerateMipmap(GL_TEXTURE_2D);
         stbi_image_free(data);
     } else {
-        std::cerr << "Failed to load texture: " << path << std::endl;
+        std::cerr << "Erreur texture: " << path << std::endl;
     }
     return texID;
 }

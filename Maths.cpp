@@ -30,7 +30,7 @@ struct Mat4 {
     
 };
 
-inline Mat4 Multiply(const Mat4& A, const Mat4& B) {
+Mat4 Multiply(const Mat4& A, const Mat4& B) {
     Mat4 C;
     for (int col = 0; col < 4; col++) {
         for (int row = 0; row < 4; row++) {
@@ -45,7 +45,7 @@ inline Mat4 Multiply(const Mat4& A, const Mat4& B) {
 }
 
 
-inline Mat4 Translate(float x, float y, float z) {
+Mat4 Translate(float x, float y, float z) {
     Mat4 mat;
     mat.m[12] = x;
     mat.m[13] = y;
@@ -53,7 +53,7 @@ inline Mat4 Translate(float x, float y, float z) {
     return mat;
 }
 
-inline Mat4 Perspective(float fov, float aspect, float near, float far) {
+Mat4 Perspective(float fov, float aspect, float near, float far) {
     Mat4 mat;
     for(int i = 0; i < 16; i++) mat.m[i] = 0.0f; 
 
@@ -67,20 +67,18 @@ inline Mat4 Perspective(float fov, float aspect, float near, float far) {
     
     return mat;
 }
-// 1. Crée la matrice Identité (Diagonale de 1, le reste à 0)
 Mat4 Identity() {
     Mat4 matrix;
     for (int i = 0; i < 16; ++i) matrix.m[i] = 0.0f;
-    matrix.m[0] = 1.0f;  // Ligne 1, Col 1
-    matrix.m[5] = 1.0f;  // Ligne 2, Col 2
-    matrix.m[10] = 1.0f; // Ligne 3, Col 3
-    matrix.m[15] = 1.0f; // Ligne 4, Col 4
+    matrix.m[0] = 1.0f;  
+    matrix.m[5] = 1.0f;  
+    matrix.m[10] = 1.0f;
+    matrix.m[15] = 1.0f; 
     return matrix;
 }
 
-// Rotation autour de l'axe X (pour regarder vers le haut/bas)
 Mat4 RotateX(float angleRadians) {
-    Mat4 matrix = Identity(); // Démarre avec une matrice identité (diagonale de 1)
+    Mat4 matrix = Identity();
     float c = std::cos(angleRadians);
     float s = std::sin(angleRadians);
 
@@ -90,7 +88,6 @@ Mat4 RotateX(float angleRadians) {
     return matrix;
 }
 
-// Rotation autour de l'axe Y (pour tourner autour du bateau à gauche/droite)
 Mat4 RotateY(float angleRadians) {
     Mat4 matrix = Identity();
     float c = std::cos(angleRadians);
