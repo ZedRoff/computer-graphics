@@ -15,6 +15,7 @@ struct ObjectData {
     Mat4 modelMatrix; 
     float cameraDistance; 
     GLShader shader; 
+    float zFar;
 };
 
 std::vector<ObjectData> sceneObjects;
@@ -22,6 +23,41 @@ int currentObjectIndex = 0;
 
 bool rightArrowPressedLastFrame = false;
 bool leftArrowPressedLastFrame = false;
+
+
+void AddObjectToScene(const std::string& objPath, 
+                      const std::string& mtlDir, 
+                      const std::string& vertPath, 
+                      const std::string& fragPath, 
+                      float fov) 
+{
+    ObjectData obj;
+
+    LoadOBJ(objPath, obj.meshes, obj.materials, mtlDir);
+    SetupMeshBuffers(obj.meshes);
+
+    obj.shader.LoadVertexShader(vertPath.c_str());
+    obj.shader.LoadFragmentShader(fragPath.c_str());
+    obj.shader.Create(); 
+    
+    Vec3 center(0.0f, 0.0f, 0.0f);
+    float maxDim = 0.0f;
+    ComputeBoundingBox(obj.meshes, center, maxDim);
+    
+    for (size_t i = 0; i < obj.materials.size(); i++) {
+        if (!obj.materials[i].texturePath.empty()) {
+            obj.materials[i].textureID = LoadTexture(obj.materials[i].texturePath);
+        }
+    }
+
+    obj.cameraDistance = (maxDim * 0.5f) / std::tan(fov * 0.5f) * 1.2f;
+    obj.zFar = obj.cameraDistance + maxDim * 2.0f;
+    obj.modelMatrix = Translate(-center.x, -center.y, -center.z);
+
+    sceneObjects.push_back(obj);
+}
+
+
 
 
 int main(int argc, char* argv[]) {
@@ -45,50 +81,21 @@ int main(int argc, char* argv[]) {
     float fov = M_PI / 4.0f;
     float aspect = 800.0f / 600.0f;
     float zNear = 0.1f;
+ 
 
   
-    ObjectData obj0;
-    LoadOBJ("./3Dobjects/GoingMerry/GoingMerry.obj", obj0.meshes, obj0.materials, "./3Dobjects/GoingMerry/");
-    SetupMeshBuffers(obj0.meshes);
+    AddObjectToScene("./3Dobjects/GoingMerry/GoingMerry.obj", 
+                     "./3Dobjects/GoingMerry/", 
+                     "shaders/GoingMerry/basic.vs.glsl", 
+                     "shaders/GoingMerry/basic.fs.glsl", 
+                     fov);
 
-    obj0.shader.LoadVertexShader("shaders/GoingMerry/vertex_shader.glsl");
-    obj0.shader.LoadFragmentShader("shaders/GoingMerry/fragment_shader.glsl");
-    obj0.shader.Create(); 
-    
-    Vec3 center0(0.0f, 0.0f, 0.0f);
-    float maxDim0 = 0.0f;
-    ComputeBoundingBox(obj0.meshes, center0, maxDim0);
-    
-    for (size_t i = 0; i < obj0.materials.size(); i++) {
-        if (!obj0.materials[i].texturePath.empty()) {
-            obj0.materials[i].textureID = LoadTexture(obj0.materials[i].texturePath);
-        }
-    }
-    obj0.cameraDistance = (maxDim0 * 0.5f) / std::tan(fov * 0.5f) * 1.2f;
-    obj0.modelMatrix = Translate(-center0.x, -center0.y, -center0.z);
-    sceneObjects.push_back(obj0);
+    AddObjectToScene("./3Dobjects/Tree/Tree.obj", 
+                     "./3Dobjects/Tree/", 
+                     "shaders/Tree/basic.vs.glsl", 
+                     "shaders/Tree/basic.fs.glsl", 
+                     fov);
 
-    ObjectData obj1;
-    LoadOBJ("./3Dobjects/Tree/Tree.obj", obj1.meshes, obj1.materials, "./3Dobjects/Tree/");
-    SetupMeshBuffers(obj1.meshes);
-    
-     obj1.shader.LoadVertexShader("shaders/Tree/vertex_shader.glsl");
-    obj1.shader.LoadFragmentShader("shaders/tREE/fragment_shader.glsl");
-    obj1.shader.Create(); 
-
-    Vec3 center1(0.0f, 0.0f, 0.0f);
-    float maxDim1 = 0.0f;
-    ComputeBoundingBox(obj1.meshes, center1, maxDim1);
-    for (size_t i = 0; i < obj1.materials.size(); i++) {
-        if (!obj1.materials[i].texturePath.empty()) {
-            obj1.materials[i].textureID = LoadTexture(obj1.materials[i].texturePath);
-        }
-    }
-    obj1.cameraDistance = (maxDim1 * 0.5f) / std::tan(fov * 0.5f) * 1.2f;
-    obj1.modelMatrix = Translate(-center1.x, -center1.y, -center1.z); 
-    sceneObjects.push_back(obj1);
-
-    float zFar = sceneObjects[0].cameraDistance + maxDim0 * 2.0f;
 
     Camera camera;
     camera.radius = sceneObjects[0].cameraDistance; 
@@ -98,12 +105,12 @@ int main(int argc, char* argv[]) {
 
     SetupScrollCallback(window, camera);
 
-    Mat4 projMatrix = Perspective(fov, aspect, zNear, zFar);
+   Mat4 projMatrix = Perspective(fov, aspect, zNear, sceneObjects[0].zFar);
     float dummyX, dummyY, dummyZ;
 
     Vec3 lightPos(5.0f, 10.0f, 5.0f);
     Vec3 lightColor(1.0f, 1.0f, 1.0f);
-
+    int lastObjectIndex = 0;
     while (!glfwWindowShouldClose(window)) {
         glClearColor(1.f, 1.f, 1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -134,6 +141,11 @@ int main(int argc, char* argv[]) {
         UpdateCameraFromInputs(window, camera, dummyX, dummyY, dummyZ);
 
         ObjectData& currentObj = sceneObjects[currentObjectIndex];
+
+        if (currentObjectIndex != lastObjectIndex) {
+            projMatrix = Perspective(fov, aspect, zNear, currentObj.zFar);
+            lastObjectIndex = currentObjectIndex;
+        }
 
         uint32_t activeProgramID = currentObj.shader.GetProgram();
 
