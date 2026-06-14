@@ -1,4 +1,3 @@
-# 1. Détection automatique du chemin de Homebrew (gère Intel et Apple Silicon)
 HOMEBREW_PREFIX = $(shell brew --prefix 2>/dev/null || echo "/usr/local")
 
 CC = g++
@@ -9,7 +8,7 @@ all: compile run
 
 compile:
 	@mkdir -p bin
-	$(CC) $(CFLAGS) main.cpp Utils.cpp Navigation.cpp Maths.cpp tiny_obj_loader.cc -o bin/projet $(LDFLAGS)
+	$(CC) $(CFLAGS) main.cpp Utils.cpp Navigation.cpp Maths.cpp common/GLShader.cpp tiny_obj_loader.cc -o bin/projet $(LDFLAGS)
 
 run:
 	./bin/projet

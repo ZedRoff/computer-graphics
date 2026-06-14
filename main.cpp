@@ -7,13 +7,14 @@
 #include "Structures.h"
 #include "Utils.h"
 #include "Navigation.h"
+#include "common/GLShader.h"
 
 struct ObjectData {
     std::vector<Mesh> meshes;
     std::vector<Material> materials;
     Mat4 modelMatrix; 
     float cameraDistance; 
-    unsigned int shaderProgram;
+    GLShader shader; 
 };
 
 std::vector<ObjectData> sceneObjects;
@@ -50,7 +51,9 @@ int main(int argc, char* argv[]) {
     LoadOBJ("./3Dobjects/GoingMerry/GoingMerry.obj", obj0.meshes, obj0.materials, "./3Dobjects/GoingMerry/");
     SetupMeshBuffers(obj0.meshes);
 
-    obj0.shaderProgram = CreateShaderFromFiles("shaders/GoingMerry/vertex_shader.glsl", "shaders/GoingMerry/fragment_shader.glsl");
+    obj0.shader.LoadVertexShader("shaders/GoingMerry/vertex_shader.glsl");
+    obj0.shader.LoadFragmentShader("shaders/GoingMerry/fragment_shader.glsl");
+    obj0.shader.Create(); 
     
     Vec3 center0(0.0f, 0.0f, 0.0f);
     float maxDim0 = 0.0f;
@@ -69,7 +72,9 @@ int main(int argc, char* argv[]) {
     LoadOBJ("./3Dobjects/Tree/Tree.obj", obj1.meshes, obj1.materials, "./3Dobjects/Tree/");
     SetupMeshBuffers(obj1.meshes);
     
-    obj1.shaderProgram = CreateShaderFromFiles("shaders/Tree/vertex_shader.glsl", "shaders/Tree/fragment_shader.glsl");
+     obj1.shader.LoadVertexShader("shaders/Tree/vertex_shader.glsl");
+    obj1.shader.LoadFragmentShader("shaders/tREE/fragment_shader.glsl");
+    obj1.shader.Create(); 
 
     Vec3 center1(0.0f, 0.0f, 0.0f);
     float maxDim1 = 0.0f;
@@ -130,33 +135,37 @@ int main(int argc, char* argv[]) {
 
         ObjectData& currentObj = sceneObjects[currentObjectIndex];
 
-        glUseProgram(currentObj.shaderProgram);
+        uint32_t activeProgramID = currentObj.shader.GetProgram();
+
+        glUseProgram(activeProgramID);
 
         Mat4 viewMatrix = ComputeViewMatrix(camera);
         Mat4 mvpMatrix  = Multiply(projMatrix, Multiply(viewMatrix, currentObj.modelMatrix));
 
-       unsigned int mvpLoc = glGetUniformLocation(currentObj.shaderProgram, "u_MVP");
+      unsigned int mvpLoc = glGetUniformLocation(activeProgramID, "u_MVP");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvpMatrix.m[0]);
-        glUniformMatrix4fv(glGetUniformLocation(currentObj.shaderProgram, "u_Model"), 1, GL_FALSE, &currentObj.modelMatrix.m[0]);
+        glUniformMatrix4fv(glGetUniformLocation(activeProgramID, "u_Model"), 1, GL_FALSE, &currentObj.modelMatrix.m[0]);
+
+
         Vec3 cameraPos;
         cameraPos.x = camera.radius * std::cos(camera.pitch) * std::cos(camera.yaw);
         cameraPos.y = camera.radius * std::sin(camera.pitch);
         cameraPos.z = camera.radius * std::cos(camera.pitch) * std::sin(camera.yaw);
 
-       glUniform3f(glGetUniformLocation(currentObj.shaderProgram, "u_lightPos"), lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(glGetUniformLocation(currentObj.shaderProgram, "u_viewPos"), cameraPos.x, cameraPos.y, cameraPos.z);
-        glUniform3f(glGetUniformLocation(currentObj.shaderProgram, "u_lightColor"), lightColor.x, lightColor.y, lightColor.z);
-    
-        glUniform1i(glGetUniformLocation(currentObj.shaderProgram, "u_Texture"), 0);
+       glUniform3f(glGetUniformLocation(activeProgramID, "u_lightPos"), lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_viewPos"), cameraPos.x, cameraPos.y, cameraPos.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_lightColor"), lightColor.x, lightColor.y, lightColor.z);
+
+       glUniform1i(glGetUniformLocation(activeProgramID, "u_Texture"), 0);
 
         for (size_t i = 0; i < currentObj.meshes.size(); i++) {
             int matID = currentObj.meshes[i].materialId;
 
-            int ambientLoc = glGetUniformLocation(currentObj.shaderProgram, "u_ambientColor");
-            int diffuseLoc = glGetUniformLocation(currentObj.shaderProgram, "u_diffuseColor");
-            int specularLoc = glGetUniformLocation(currentObj.shaderProgram, "u_specularColor");
-            int shininessLoc = glGetUniformLocation(currentObj.shaderProgram, "u_shininess");
-            int hasTexLoc = glGetUniformLocation(currentObj.shaderProgram, "u_hasTexture");
+           int ambientLoc  = glGetUniformLocation(activeProgramID, "u_ambientColor");
+            int diffuseLoc  = glGetUniformLocation(activeProgramID, "u_diffuseColor");
+            int specularLoc = glGetUniformLocation(activeProgramID, "u_specularColor");
+            int shininessLoc = glGetUniformLocation(activeProgramID, "u_shininess");
+            int hasTexLoc    = glGetUniformLocation(activeProgramID, "u_hasTexture");
 
             glActiveTexture(GL_TEXTURE0);
 
@@ -190,7 +199,7 @@ int main(int argc, char* argv[]) {
     }
 
     for (size_t i = 0; i < sceneObjects.size(); i++) {
-        glDeleteProgram(sceneObjects[i].shaderProgram);
+        sceneObjects[i].shader.Destroy();
     }
     glfwTerminate();
     return 0;

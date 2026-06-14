@@ -7,43 +7,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-std::string LoadShaderSource(const std::string& filePath) {
-    std::ifstream shaderFile(filePath);
-    
-    std::stringstream shaderStream;
-    shaderStream << shaderFile.rdbuf();
-    shaderFile.close();
-    return shaderStream.str();
-}
-
-unsigned int CreateShaderFromFiles(const std::string& vertexPath, const std::string& fragmentPath) {
-    std::string vertexCodeStr = LoadShaderSource(vertexPath);
-    std::string fragmentCodeStr = LoadShaderSource(fragmentPath);
-
-    const char* vertexSource = vertexCodeStr.c_str();
-    const char* fragmentSource = fragmentCodeStr.c_str();
-
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexSource, NULL);
-    glCompileShader(vertexShader);
-
-
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-    glCompileShader(fragmentShader);
-    
-   
-
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    return shaderProgram;
-}
 
 bool LoadOBJ(const std::string& filename, std::vector<Mesh>& outMeshes, std::vector<Material>& outMaterials, const std::string& ext) {
     tinyobj::ObjReaderConfig reader_config;
