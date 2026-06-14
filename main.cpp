@@ -25,7 +25,6 @@ bool rightArrowPressedLastFrame = false;
 bool leftArrowPressedLastFrame = false;
 
 
-
 void AddObjectToScene(const std::string& objPath, 
                       const std::string& mtlDir, 
                       const std::string& vertPath, 
@@ -88,14 +87,13 @@ int main(int argc, char* argv[]) {
                      "shaders/GoingMerry/basic.vs.glsl", 
                      "shaders/GoingMerry/basic.fs.glsl", 
                      fov);
-
-    AddObjectToScene("./3Dobjects/Tree/Tree.obj", 
-                     "./3Dobjects/Tree/", 
-                     "shaders/Tree/basic.vs.glsl", 
-                     "shaders/Tree/basic.fs.glsl", 
+     AddObjectToScene("./3Dobjects/laboon-one-piece/Laboon_One_Piece.obj", 
+                     "./3Dobjects/laboon-one-piece/", 
+                     "shaders/laboon-one-piece/basic.vs.glsl", 
+                     "shaders/laboon-one-piece/basic.fs.glsl", 
                      fov);
 
-   
+
 
     Mat4 projMatrix = Perspective(fov, aspect, zNear, sceneObjects[0].zFar);
 

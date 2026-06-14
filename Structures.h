@@ -26,4 +26,13 @@ struct Mesh {
     unsigned int VAO = 0, VBO = 0; 
 };
 
+struct CameraMatricesUBO {
+    Mat4 projection;
+    Mat4 view;
+};
+
+struct ModelDataUBO {
+    Mat4 model;
+};
+
 #endif
