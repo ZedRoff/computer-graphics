@@ -37,4 +37,10 @@ Mat4 Translate(float x, float y, float z);
 Mat4 Perspective(float fov, float aspect, float near, float far);
 Mat4 Multiply(const Mat4& A, const Mat4& B);
 
+Vec3 Cross(Vec3 a, Vec3 b);
+
+float Dot(Vec3 a, Vec3 b);
+
+Vec3 Normalize(Vec3 v);
+
 #endif

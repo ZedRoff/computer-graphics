@@ -1,54 +1,85 @@
 #include "Navigation.h"
-#include <iostream>
 #include <cmath>
 
-static Camera* g_cameraPtr = nullptr;
+float radius = 50.0f;
 
-static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (g_cameraPtr) {
-        g_cameraPtr->radius -= yoffset * 0.5f;
-        if (g_cameraPtr->radius < 1.0f) g_cameraPtr->radius = 1.0f;
+static float phi = 0.0f;   
+static float theta = 0.0f; 
+static double lastMouseX = 0.0;
+static double lastMouseY = 0.0;
+static bool firstMouse = true;
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_PRESS) {
+        firstMouse = true;
+        return;
     }
-}
 
-void SetupScrollCallback(GLFWwindow* window, Camera& camera) {
-    g_cameraPtr = &camera;
-    glfwSetScrollCallback(window, scroll_callback);
-}
+    if (firstMouse) {
+        lastMouseX = xpos;
+        lastMouseY = ypos;
+        firstMouse = false;
+    }
 
-void UpdateCameraFromInputs(GLFWwindow* window, Camera& camera, float& outCamX, float& outCamY, float& outCamZ) {
-    double mouseX, mouseY;
-    glfwGetCursorPos(window, &mouseX, &mouseY);
+    float xoffset = (float)(xpos - lastMouseX);
+    float yoffset = (float)(lastMouseY - ypos); 
+    lastMouseX = xpos;
+    lastMouseY = ypos;
+
+    float sensitivity = 0.005f; 
+    phi += xoffset * sensitivity;
+    theta += yoffset * sensitivity;
+
+    if (theta > 1.55f)  theta = 1.55f;  
+    if (theta < -1.55f) theta = -1.55f; 
     
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        if (!camera.isMousePressed) {
-            camera.lastX = mouseX;
-            camera.lastY = mouseY;
-            camera.isMousePressed = true;
-        }
-
-        double deltaX = mouseX - camera.lastX;
-        double deltaY = mouseY - camera.lastY;
-        
-        camera.lastX = mouseX;
-        camera.lastY = mouseY;
-
-        float sensitivity = 0.005f;
-        camera.yaw   += deltaX * sensitivity;
-        camera.pitch -= deltaY * sensitivity;
-
-        if (camera.pitch > 1.5f)  camera.pitch = 1.5f;
-        if (camera.pitch < -1.5f) camera.pitch = -1.5f;
-    } else {
-        camera.isMousePressed = false;
-    }
-
-    outCamX = camera.radius * std::cos(camera.pitch) * std::cos(camera.yaw);
-    outCamY = camera.radius * std::sin(camera.pitch);
-    outCamZ = camera.radius * std::cos(camera.pitch) * std::sin(camera.yaw);
+    if (phi > M_PI) phi -= 2.0f * M_PI;
+    if (phi < -M_PI) phi += 2.0f * M_PI;
 }
 
-Mat4 ComputeViewMatrix(const Camera& camera) {
-    return Multiply(Translate(0.0f, 0.0f, -camera.radius), 
-           Multiply(RotateX(camera.pitch), RotateY(-camera.yaw - M_PI / 2.0f)));
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    radius -= (float)yoffset * 0.5f; 
+    
+}
+
+Vec3 GetCameraPosition() {
+    float camX = radius * cosf(theta) * cosf(phi);
+    float camY = radius * sinf(theta);
+    float camZ = radius * cosf(theta) * sinf(phi);
+    return { camX, camY, camZ };
+}
+
+Mat4 LookAt() {
+    Vec3 position = GetCameraPosition();
+    Vec3 target = { 0.0f, 0.0f, 0.0f }; 
+    Vec3 up = { 0.0f, 1.0f, 0.0f };
+
+    Vec3 forward = Normalize({ position.x - target.x, position.y - target.y, position.z - target.z });
+    Vec3 right = Normalize(Cross(up, forward));
+    Vec3 upCorr = Cross(forward, right);
+
+    float dotRight = Dot(position, right);
+    float dotUp = Dot(position, upCorr);
+    float dotForward = Dot(position, forward);
+
+    Mat4 res = Identity();
+
+    res.m[0] = right.x;   
+    res.m[1] = upCorr.x;   
+    res.m[2] = forward.x;   
+    res.m[3] = 0.0f;
+    res.m[4] = right.y;   
+    res.m[5] = upCorr.y;   
+    res.m[6] = forward.y;   
+    res.m[7] = 0.0f;
+    res.m[8] = right.z;   
+    res.m[9] = upCorr.z;   
+    res.m[10] = forward.z;  
+    res.m[11] = 0.0f;
+    res.m[12] = -dotRight; 
+    res.m[13] = -dotUp;    
+    res.m[14] = -dotForward; 
+    res.m[15] = 1.0f;
+
+    return res;
 }

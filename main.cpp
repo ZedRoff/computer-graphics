@@ -2,27 +2,28 @@
 #include <vector>
 #include <GL/glew.h>  
 #include <GLFW/glfw3.h>
+#include <cmath>
 
 #include "Maths.h"
 #include "Structures.h"
 #include "Utils.h"
-#include "Navigation.h"
 #include "common/GLShader.h"
+#include "Navigation.h"
 
 struct ObjectData {
     std::vector<Mesh> meshes;
     std::vector<Material> materials;
     Mat4 modelMatrix; 
     float cameraDistance; 
+    float zFar; 
     GLShader shader; 
-    float zFar;
 };
-
 std::vector<ObjectData> sceneObjects;
 int currentObjectIndex = 0; 
 
 bool rightArrowPressedLastFrame = false;
 bool leftArrowPressedLastFrame = false;
+
 
 
 void AddObjectToScene(const std::string& objPath, 
@@ -51,14 +52,11 @@ void AddObjectToScene(const std::string& objPath,
     }
 
     obj.cameraDistance = (maxDim * 0.5f) / std::tan(fov * 0.5f) * 1.2f;
-    obj.zFar = obj.cameraDistance + maxDim * 2.0f;
+    obj.zFar = obj.cameraDistance + maxDim * 2.0f; 
     obj.modelMatrix = Translate(-center.x, -center.y, -center.z);
 
     sceneObjects.push_back(obj);
 }
-
-
-
 
 int main(int argc, char* argv[]) {
     glfwInit();
@@ -72,18 +70,19 @@ int main(int argc, char* argv[]) {
     
     glfwMakeContextCurrent(window);
     
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+  
+
     glewExperimental = GL_TRUE;
     glewInit();
 
     glEnable(GL_DEPTH_TEST);
 
-
     float fov = M_PI / 4.0f;
     float aspect = 800.0f / 600.0f;
     float zNear = 0.1f;
- 
 
-  
     AddObjectToScene("./3Dobjects/GoingMerry/GoingMerry.obj", 
                      "./3Dobjects/GoingMerry/", 
                      "shaders/GoingMerry/basic.vs.glsl", 
@@ -96,32 +95,25 @@ int main(int argc, char* argv[]) {
                      "shaders/Tree/basic.fs.glsl", 
                      fov);
 
+   
 
-    Camera camera;
-    camera.radius = sceneObjects[0].cameraDistance; 
-    camera.yaw = 0.0f;
-    camera.pitch = 0.0f;
-    camera.isMousePressed = false;
-
-    SetupScrollCallback(window, camera);
-
-   Mat4 projMatrix = Perspective(fov, aspect, zNear, sceneObjects[0].zFar);
-    float dummyX, dummyY, dummyZ;
+    Mat4 projMatrix = Perspective(fov, aspect, zNear, sceneObjects[0].zFar);
 
     Vec3 lightPos(5.0f, 10.0f, 5.0f);
     Vec3 lightColor(1.0f, 1.0f, 1.0f);
-    int lastObjectIndex = 0;
+
+    int lastObjectIndex = 0; 
+    radius = sceneObjects[0].cameraDistance;
     while (!glfwWindowShouldClose(window)) {
         glClearColor(1.f, 1.f, 1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glfwPollEvents();
 
-   
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             if (!rightArrowPressedLastFrame) {
                 currentObjectIndex = (currentObjectIndex + 1) % sceneObjects.size();
-                camera.radius = sceneObjects[currentObjectIndex].cameraDistance; 
+                radius = sceneObjects[currentObjectIndex].cameraDistance; 
                 rightArrowPressedLastFrame = true;
             }
         } else {
@@ -131,14 +123,12 @@ int main(int argc, char* argv[]) {
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
             if (!leftArrowPressedLastFrame) {
                 currentObjectIndex = (currentObjectIndex - 1 + sceneObjects.size()) % sceneObjects.size();
-                camera.radius = sceneObjects[currentObjectIndex].cameraDistance;
+                radius = sceneObjects[currentObjectIndex].cameraDistance; 
                 leftArrowPressedLastFrame = true;
             }
         } else {
             leftArrowPressedLastFrame = false;
         }
-
-        UpdateCameraFromInputs(window, camera, dummyX, dummyY, dummyZ);
 
         ObjectData& currentObj = sceneObjects[currentObjectIndex];
 
@@ -148,32 +138,28 @@ int main(int argc, char* argv[]) {
         }
 
         uint32_t activeProgramID = currentObj.shader.GetProgram();
-
         glUseProgram(activeProgramID);
 
-        Mat4 viewMatrix = ComputeViewMatrix(camera);
+     
+        Vec3 camPos = GetCameraPosition();
+        Mat4 viewMatrix = LookAt();
         Mat4 mvpMatrix  = Multiply(projMatrix, Multiply(viewMatrix, currentObj.modelMatrix));
 
-      unsigned int mvpLoc = glGetUniformLocation(activeProgramID, "u_MVP");
+
+        unsigned int mvpLoc = glGetUniformLocation(activeProgramID, "u_MVP");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvpMatrix.m[0]);
         glUniformMatrix4fv(glGetUniformLocation(activeProgramID, "u_Model"), 1, GL_FALSE, &currentObj.modelMatrix.m[0]);
 
-
-        Vec3 cameraPos;
-        cameraPos.x = camera.radius * std::cos(camera.pitch) * std::cos(camera.yaw);
-        cameraPos.y = camera.radius * std::sin(camera.pitch);
-        cameraPos.z = camera.radius * std::cos(camera.pitch) * std::sin(camera.yaw);
-
-       glUniform3f(glGetUniformLocation(activeProgramID, "u_lightPos"), lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(glGetUniformLocation(activeProgramID, "u_viewPos"), cameraPos.x, cameraPos.y, cameraPos.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_lightPos"), lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_viewPos"), camPos.x, camPos.y, camPos.z);
         glUniform3f(glGetUniformLocation(activeProgramID, "u_lightColor"), lightColor.x, lightColor.y, lightColor.z);
 
-       glUniform1i(glGetUniformLocation(activeProgramID, "u_Texture"), 0);
+        glUniform1i(glGetUniformLocation(activeProgramID, "u_Texture"), 0);
 
         for (size_t i = 0; i < currentObj.meshes.size(); i++) {
             int matID = currentObj.meshes[i].materialId;
 
-           int ambientLoc  = glGetUniformLocation(activeProgramID, "u_ambientColor");
+            int ambientLoc  = glGetUniformLocation(activeProgramID, "u_ambientColor");
             int diffuseLoc  = glGetUniformLocation(activeProgramID, "u_diffuseColor");
             int specularLoc = glGetUniformLocation(activeProgramID, "u_specularColor");
             int shininessLoc = glGetUniformLocation(activeProgramID, "u_shininess");
