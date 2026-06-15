@@ -26,14 +26,6 @@ FramebufferData g_PostProcessFBO;
 GLShader g_PostProcessShader;
 uint32_t quadVAO = 0, quadVBO = 0;
 
-
-int currentObjectIndex = 0; 
-
-bool rightArrowPressedLastFrame = false;
-bool leftArrowPressedLastFrame = false;
-
-
-
 void InitPostProcess(int width, int height) {
     glGenTextures(1, &g_PostProcessFBO.colorTexture);
     glBindTexture(GL_TEXTURE_2D, g_PostProcessFBO.colorTexture);
@@ -72,7 +64,6 @@ void InitPostProcess(int width, int height) {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex2D), (void*)offsetof(Vertex2D, texCoords));
     glBindVertexArray(0);
 }
-
 
 void AddObjectToScene(const std::string& objPath, 
                       const std::string& mtlDir, 
@@ -142,66 +133,31 @@ int main(int argc, char* argv[]) {
     glBindBufferBase(GL_UNIFORM_BUFFER, cameraBindingPoint, g_Camera.UBO); 
     glBindBuffer(GL_UNIFORM_BUFFER, 0); 
 
-    AddObjectToScene("./3Dobjects/GoingMerry/GoingMerry.obj", 
-                     "./3Dobjects/GoingMerry/", 
-                     "shaders/GoingMerry/basic.vs.glsl", 
-                     "shaders/GoingMerry/basic.fs.glsl", 
-                     fov);
-    AddObjectToScene("./3Dobjects/laboon-one-piece/Laboon_One_Piece.obj", 
-                     "./3Dobjects/laboon-one-piece/", 
-                     "shaders/laboon-one-piece/basic.vs.glsl", 
-                     "shaders/laboon-one-piece/basic.fs.glsl", 
-                     fov);
-
-    AddObjectToScene("./3Dobjects/one-piece-kuzan/Aokiji.obj", 
-                     "./3Dobjects/one-piece-kuzan/", 
-                     "shaders/one-piece-kuzan/basic.vs.glsl", 
-                     "shaders/one-piece-kuzan/basic.fs.glsl", 
-                     fov);
-
-    AddObjectToScene("./3Dobjects/one-piece-thousand-sunny/sunny.obj", 
-                     "./3Dobjects/one-piece-thousand-sunny/", 
-                     "shaders/one-piece-thousand-sunny/basic.vs.glsl", 
-                     "shaders/one-piece-thousand-sunny/basic.fs.glsl", 
-                     fov);
+    AddObjectToScene("./3Dobjects/GoingMerry/GoingMerry.obj", "./3Dobjects/GoingMerry/", "shaders/GoingMerry/basic.vs.glsl", "shaders/GoingMerry/basic.fs.glsl", fov);
+    AddObjectToScene("./3Dobjects/laboon-one-piece/Laboon_One_Piece.obj", "./3Dobjects/laboon-one-piece/", "shaders/laboon-one-piece/basic.vs.glsl", "shaders/laboon-one-piece/basic.fs.glsl", fov);
+    AddObjectToScene("./3Dobjects/one-piece-kuzan/Aokiji.obj", "./3Dobjects/one-piece-kuzan/", "shaders/one-piece-kuzan/basic.vs.glsl", "shaders/one-piece-kuzan/basic.fs.glsl", fov);
+    AddObjectToScene("./3Dobjects/one-piece-thousand-sunny/sunny.obj", "./3Dobjects/one-piece-thousand-sunny/", "shaders/one-piece-thousand-sunny/basic.vs.glsl", "shaders/one-piece-thousand-sunny/basic.fs.glsl", fov);
 
     Vec3 lightPos(5.0f, 10.0f, 5.0f);
     Vec3 lightColor(1.0f, 1.0f, 1.0f);
 
     int lastObjectIndex = -1; 
-    radius = sceneObjects[0].cameraDistance;
-
-
+    radius = sceneObjects[0].cameraDistance; 
 
     InitPostProcess(800, 600);
     g_PostProcessShader.LoadVertexShader("shaders/postprocess/postprocess.vs.glsl");
     g_PostProcessShader.LoadFragmentShader("shaders/postprocess/postprocess.fs.glsl");
     g_PostProcessShader.Create();
 
+    std::vector<float> cameraDistances(sceneObjects.size());
+    for (size_t i = 0; i < sceneObjects.size(); ++i) {
+        cameraDistances[i] = sceneObjects[i].cameraDistance;
+    }
 
     while (!glfwWindowShouldClose(window)) {
-     
         glfwPollEvents();
 
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            if (!rightArrowPressedLastFrame) {
-                currentObjectIndex = (currentObjectIndex + 1) % sceneObjects.size();
-                radius = sceneObjects[currentObjectIndex].cameraDistance; 
-                rightArrowPressedLastFrame = true;
-            }
-        } else {
-            rightArrowPressedLastFrame = false;
-        }
-
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            if (!leftArrowPressedLastFrame) {
-                currentObjectIndex = (currentObjectIndex - 1 + sceneObjects.size()) % sceneObjects.size();
-                radius = sceneObjects[currentObjectIndex].cameraDistance; 
-                leftArrowPressedLastFrame = true;
-            }
-        } else {
-            leftArrowPressedLastFrame = false;
-        }
+        UpdateNavigationInputs(window, sceneObjects.size(), cameraDistances.data());
 
         ObjectData& currentObj = sceneObjects[currentObjectIndex];
 
@@ -229,7 +185,6 @@ int main(int argc, char* argv[]) {
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
         uint32_t activeProgramID = currentObj.shader.GetProgram();
         glUseProgram(activeProgramID);
@@ -277,7 +232,6 @@ int main(int argc, char* argv[]) {
             glBindVertexArray(currentObj.meshes[i].VAO);
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(currentObj.meshes[i].vertices.size()));
         }
-
 
         if (currentObjectIndex == 0) 
         {

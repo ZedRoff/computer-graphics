@@ -3,9 +3,9 @@
 #include <fstream>
 #include <sstream>
 #include <GL/glew.h>
-#include "tiny_obj_loader.h"
+#include "common/tiny_obj_loader.h"
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "common/stb_image.h"
 
 
 bool LoadOBJ(const std::string& filename, std::vector<Mesh>& outMeshes, std::vector<Material>& outMaterials, const std::string& ext) {

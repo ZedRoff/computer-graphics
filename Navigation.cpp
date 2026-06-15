@@ -2,12 +2,16 @@
 #include <cmath>
 
 float radius = 50.0f;
+int currentObjectIndex = 0; 
 
 static float phi = 0.0f;   
 static float theta = 0.0f; 
 static double lastMouseX = 0.0;
 static double lastMouseY = 0.0;
 static bool firstMouse = true;
+
+static bool rightArrowPressedLastFrame = false;
+static bool leftArrowPressedLastFrame = false;
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_PRESS) {
@@ -39,7 +43,28 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     radius -= (float)yoffset * 0.5f; 
-    
+}
+
+void UpdateNavigationInputs(GLFWwindow* window, size_t totalObjects, const float* objectsCameraDistances) {
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        if (!rightArrowPressedLastFrame) {
+            currentObjectIndex = (currentObjectIndex + 1) % totalObjects;
+            radius = objectsCameraDistances[currentObjectIndex]; 
+            rightArrowPressedLastFrame = true;
+        }
+    } else {
+        rightArrowPressedLastFrame = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        if (!leftArrowPressedLastFrame) {
+            currentObjectIndex = (currentObjectIndex - 1 + totalObjects) % totalObjects;
+            radius = objectsCameraDistances[currentObjectIndex]; 
+            leftArrowPressedLastFrame = true;
+        }
+    } else {
+        leftArrowPressedLastFrame = false;
+    }
 }
 
 Vec3 GetCameraPosition() {
