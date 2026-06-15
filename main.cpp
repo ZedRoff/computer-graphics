@@ -21,10 +21,58 @@ struct ObjectData {
     GLShader shader; 
 };
 std::vector<ObjectData> sceneObjects;
+
+FramebufferData g_PostProcessFBO;
+GLShader g_PostProcessShader;
+uint32_t quadVAO = 0, quadVBO = 0;
+
+
 int currentObjectIndex = 0; 
 
 bool rightArrowPressedLastFrame = false;
 bool leftArrowPressedLastFrame = false;
+
+
+
+void InitPostProcess(int width, int height) {
+    glGenTextures(1, &g_PostProcessFBO.colorTexture);
+    glBindTexture(GL_TEXTURE_2D, g_PostProcessFBO.colorTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glGenTextures(1, &g_PostProcessFBO.depthTexture);
+    glBindTexture(GL_TEXTURE_2D, g_PostProcessFBO.depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
+
+    glGenFramebuffers(1, &g_PostProcessFBO.FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, g_PostProcessFBO.FBO);
+    
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, g_PostProcessFBO.colorTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, g_PostProcessFBO.depthTexture, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+
+    Vertex2D quadVertices[] = {
+        { {-1.0f,  1.0f},  {0.0f, 1.0f} },
+        { {-1.0f, -1.0f},  {0.0f, 0.0f} },
+        { { 1.0f,  1.0f},  {1.0f, 1.0f} },
+        { { 1.0f, -1.0f},  {1.0f, 0.0f} }
+    };
+
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex2D), (void*)offsetof(Vertex2D, position));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex2D), (void*)offsetof(Vertex2D, texCoords));
+    glBindVertexArray(0);
+}
+
 
 void AddObjectToScene(const std::string& objPath, 
                       const std::string& mtlDir, 
@@ -105,10 +153,16 @@ int main(int argc, char* argv[]) {
                      "shaders/laboon-one-piece/basic.fs.glsl", 
                      fov);
 
-     AddObjectToScene("./3Dobjects/one-piece-kuzan/Aokiji.obj", 
+    AddObjectToScene("./3Dobjects/one-piece-kuzan/Aokiji.obj", 
                      "./3Dobjects/one-piece-kuzan/", 
                      "shaders/one-piece-kuzan/basic.vs.glsl", 
                      "shaders/one-piece-kuzan/basic.fs.glsl", 
+                     fov);
+
+    AddObjectToScene("./3Dobjects/one-piece-thousand-sunny/sunny.obj", 
+                     "./3Dobjects/one-piece-thousand-sunny/", 
+                     "shaders/one-piece-thousand-sunny/basic.vs.glsl", 
+                     "shaders/one-piece-thousand-sunny/basic.fs.glsl", 
                      fov);
 
     Vec3 lightPos(5.0f, 10.0f, 5.0f);
@@ -117,10 +171,16 @@ int main(int argc, char* argv[]) {
     int lastObjectIndex = -1; 
     radius = sceneObjects[0].cameraDistance;
 
-    while (!glfwWindowShouldClose(window)) {
-        glClearColor(1.f, 1.f, 1.f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+    InitPostProcess(800, 600);
+    g_PostProcessShader.LoadVertexShader("shaders/postprocess/postprocess.vs.glsl");
+    g_PostProcessShader.LoadFragmentShader("shaders/postprocess/postprocess.fs.glsl");
+    g_PostProcessShader.Create();
+
+
+    while (!glfwWindowShouldClose(window)) {
+     
         glfwPollEvents();
 
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
@@ -157,6 +217,20 @@ int main(int argc, char* argv[]) {
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(Mat4), sizeof(Mat4), &g_Camera.projectionMatrix);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+        if (currentObjectIndex == 0) {
+            glBindFramebuffer(GL_FRAMEBUFFER, g_PostProcessFBO.FBO);
+        } else {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
+        glViewport(0, 0, 800, 600); 
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
         uint32_t activeProgramID = currentObj.shader.GetProgram();
         glUseProgram(activeProgramID);
 
@@ -172,11 +246,11 @@ int main(int argc, char* argv[]) {
         for (size_t i = 0; i < currentObj.meshes.size(); i++) {
             int matID = currentObj.meshes[i].materialId;
 
-            int ambientLoc  = glGetUniformLocation(activeProgramID, "u_ambientColor");
-            int diffuseLoc  = glGetUniformLocation(activeProgramID, "u_diffuseColor");
+            int ambientLoc = glGetUniformLocation(activeProgramID, "u_ambientColor");
+            int diffuseLoc = glGetUniformLocation(activeProgramID, "u_diffuseColor");
             int specularLoc = glGetUniformLocation(activeProgramID, "u_specularColor");
             int shininessLoc = glGetUniformLocation(activeProgramID, "u_shininess");
-            int hasTexLoc    = glGetUniformLocation(activeProgramID, "u_hasTexture");
+            int hasTexLoc = glGetUniformLocation(activeProgramID, "u_hasTexture");
 
             glActiveTexture(GL_TEXTURE0);
 
@@ -203,6 +277,32 @@ int main(int argc, char* argv[]) {
             glBindVertexArray(currentObj.meshes[i].VAO);
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(currentObj.meshes[i].vertices.size()));
         }
+
+
+        if (currentObjectIndex == 0) 
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+            glViewport(0, 0, 800, 600);
+
+            glDisable(GL_DEPTH_TEST);
+            glDepthMask(GL_FALSE);
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            uint32_t postProgramID = g_PostProcessShader.GetProgram();
+            glUseProgram(postProgramID);
+            
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, g_PostProcessFBO.colorTexture); 
+            glUniform1i(glGetUniformLocation(postProgramID, "u_ScreenTexture"), 0);
+
+            glBindVertexArray(quadVAO);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+            glBindVertexArray(0);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
 

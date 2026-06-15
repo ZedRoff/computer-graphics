@@ -34,4 +34,15 @@ struct ViewProj {
 
 const uint32_t cameraBindingPoint = 0;
 
+struct FramebufferData {
+    uint32_t FBO = 0;
+    uint32_t colorTexture = 0;
+    uint32_t depthTexture = 0;
+};
+
+struct Vertex2D {
+    Vec2 position;
+    Vec2 texCoords;
+};
+
 #endif

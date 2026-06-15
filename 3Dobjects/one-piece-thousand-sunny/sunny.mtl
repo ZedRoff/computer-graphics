@@ -1,0 +1,328 @@
+# Wavefront MTL
+# Created by fragMOTION
+# http://www.fragmosoft.com
+
+newmtl surface_000
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 009.png
+newmtl surface_001
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 014.png
+newmtl surface_002
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 015.png
+newmtl surface_003
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 011.png
+newmtl surface_004
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 006.png
+newmtl surface_005
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 013.png
+newmtl surface_006
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 003.png
+newmtl surface_007
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 002.png
+newmtl surface_008
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 000.png
+newmtl surface_009
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 007.png
+newmtl surface_010
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 004.png
+newmtl surface_011
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 001.png
+newmtl surface_012
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 012.png
+newmtl surface_013
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 019.png
+newmtl surface_014
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 029.png
+newmtl surface_015
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 031.png
+newmtl surface_016
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 030.png
+newmtl surface_017
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 010.png
+newmtl surface_018
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 021.png
+newmtl surface_019
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 018.png
+newmtl surface_020
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 024.png
+newmtl surface_021
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 017.png
+newmtl surface_022
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 028.png
+newmtl surface_023
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 016.png
+newmtl surface_024
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 027.png
+newmtl surface_025
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 022.png
+newmtl surface_026
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 026.png
+newmtl surface_027
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 032.png
+newmtl surface_028
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 020.png
+newmtl surface_029
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 008.png
+newmtl surface_030
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 005.png
+newmtl surface_031
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 033.png
+newmtl surface_032
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 025.png
+newmtl surface_033
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 023.png
+newmtl surface_034
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 035.png
+newmtl surface_035
+illum 2
+d 1
+ka 0.776471 0.776471 0.776471
+kd 0.776471 0.776471 0.776471
+ks 0 0 0
+ke 0 0 0
+ns 0.271684
+map_kd 034.png
