@@ -27,6 +27,9 @@ GLShader g_PostProcessShader;
 uint32_t quadVAO = 0, quadVBO = 0;
 
 void InitPostProcess(int width, int height) {
+
+    // https://www.reddit.com/r/opengl/comments/13buiq7/trouble_with_attaching_fbos_depth_buffer_to_a/
+    
     glGenTextures(1, &g_PostProcessFBO.colorTexture);
     glBindTexture(GL_TEXTURE_2D, g_PostProcessFBO.colorTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
@@ -134,10 +137,11 @@ int main(int argc, char* argv[]) {
     glBindBuffer(GL_UNIFORM_BUFFER, 0); 
 
     AddObjectToScene("./3Dobjects/GoingMerry/GoingMerry.obj", "./3Dobjects/GoingMerry/", "shaders/GoingMerry/basic.vs.glsl", "shaders/GoingMerry/basic.fs.glsl", fov);
-    AddObjectToScene("./3Dobjects/laboon-one-piece/Laboon_One_Piece.obj", "./3Dobjects/laboon-one-piece/", "shaders/laboon-one-piece/basic.vs.glsl", "shaders/laboon-one-piece/basic.fs.glsl", fov);
-    AddObjectToScene("./3Dobjects/one-piece-kuzan/Aokiji.obj", "./3Dobjects/one-piece-kuzan/", "shaders/one-piece-kuzan/basic.vs.glsl", "shaders/one-piece-kuzan/basic.fs.glsl", fov);
     AddObjectToScene("./3Dobjects/one-piece-thousand-sunny/sunny.obj", "./3Dobjects/one-piece-thousand-sunny/", "shaders/one-piece-thousand-sunny/basic.vs.glsl", "shaders/one-piece-thousand-sunny/basic.fs.glsl", fov);
 
+    AddObjectToScene("./3Dobjects/laboon-one-piece/Laboon_One_Piece.obj", "./3Dobjects/laboon-one-piece/", "shaders/laboon-one-piece/basic.vs.glsl", "shaders/laboon-one-piece/basic.fs.glsl", fov);
+    AddObjectToScene("./3Dobjects/one-piece-kuzan/Aokiji.obj", "./3Dobjects/one-piece-kuzan/", "shaders/one-piece-kuzan/basic.vs.glsl", "shaders/one-piece-kuzan/basic.fs.glsl", fov);
+    
     Vec3 lightPos(5.0f, 10.0f, 5.0f);
     Vec3 lightColor(1.0f, 1.0f, 1.0f);
 
@@ -192,21 +196,36 @@ int main(int argc, char* argv[]) {
         glUniformMatrix4fv(glGetUniformLocation(activeProgramID, "u_Model"), 1, GL_FALSE, &currentObj.modelMatrix.m[0]); 
 
         Vec3 camPos = GetCameraPosition();
+
         glUniform3f(glGetUniformLocation(activeProgramID, "u_lightPos"), lightPos.x, lightPos.y, lightPos.z);
         glUniform3f(glGetUniformLocation(activeProgramID, "u_viewPos"), camPos.x, camPos.y, camPos.z);
         glUniform3f(glGetUniformLocation(activeProgramID, "u_lightColor"), lightColor.x, lightColor.y, lightColor.z);
+
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_light.direction"), lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_light.diffuseColor"), lightColor.x, lightColor.y, lightColor.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_light.specularColor"), lightColor.x, lightColor.y, lightColor.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_light.ambientColor"), 0.2f, 0.2f, 0.2f);
+
 
         glUniform1i(glGetUniformLocation(activeProgramID, "u_Texture"), 0);
 
         for (size_t i = 0; i < currentObj.meshes.size(); i++) {
             int matID = currentObj.meshes[i].materialId;
 
-            int ambientLoc = glGetUniformLocation(activeProgramID, "u_ambientColor");
-            int diffuseLoc = glGetUniformLocation(activeProgramID, "u_diffuseColor");
-            int specularLoc = glGetUniformLocation(activeProgramID, "u_specularColor");
-            int shininessLoc = glGetUniformLocation(activeProgramID, "u_shininess");
-            int hasTexLoc = glGetUniformLocation(activeProgramID, "u_hasTexture");
+            int ambientLoc, diffuseLoc, specularLoc, shininessLoc;
 
+            if (currentObjectIndex == 1) {
+                ambientLoc  = glGetUniformLocation(activeProgramID, "u_material.ambientColor");
+                diffuseLoc  = glGetUniformLocation(activeProgramID, "u_material.diffuseColor");
+                specularLoc = glGetUniformLocation(activeProgramID, "u_material.specularColor");
+                shininessLoc = glGetUniformLocation(activeProgramID, "u_material.shininess");
+            } else {
+                ambientLoc  = glGetUniformLocation(activeProgramID, "u_ambientColor");
+                diffuseLoc  = glGetUniformLocation(activeProgramID, "u_diffuseColor");
+                specularLoc = glGetUniformLocation(activeProgramID, "u_specularColor");
+                shininessLoc = glGetUniformLocation(activeProgramID, "u_shininess");
+            }
+            int hasTexLoc = glGetUniformLocation(activeProgramID, "u_hasTexture");
             glActiveTexture(GL_TEXTURE0);
 
             if (matID >= 0 && matID < currentObj.materials.size()) {
