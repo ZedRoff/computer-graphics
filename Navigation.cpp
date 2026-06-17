@@ -1,5 +1,9 @@
 #include "Navigation.h"
 #include <cmath>
+#include "imgui.h" 
+#include <GLFW/glfw3.h>
+#include <vector>
+#include <string>
 
 float radius = 50.0f;
 int currentObjectIndex = 0; 
@@ -13,7 +17,21 @@ static bool firstMouse = true;
 static bool rightArrowPressedLastFrame = false;
 static bool leftArrowPressedLastFrame = false;
 
+struct ObjectInfo {
+    std::string intitule;
+    std::string titre;    
+    float cameraDistance; 
+};
+
+std::vector<ObjectInfo> mesObjets = {
+    {"Vogue Merry", "Vogue Merry", 50.0f}
+};
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (ImGui::GetIO().WantCaptureMouse) {
+        firstMouse = true;
+        return;
+    }
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_PRESS) {
         firstMouse = true;
         return;
@@ -45,11 +63,13 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     radius -= (float)yoffset * 0.5f; 
 }
 
-void UpdateNavigationInputs(GLFWwindow* window, size_t totalObjects, const float* objectsCameraDistances) {
+void UpdateNavigationInputs(GLFWwindow* window, size_t totalObjects, const std::vector<ObjectInfo>& objectsList) {
+    if (ImGui::GetIO().WantCaptureKeyboard) return;
+
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         if (!rightArrowPressedLastFrame) {
             currentObjectIndex = (currentObjectIndex + 1) % totalObjects;
-            radius = objectsCameraDistances[currentObjectIndex]; 
+            radius = objectsList[currentObjectIndex].cameraDistance; 
             rightArrowPressedLastFrame = true;
         }
     } else {
@@ -59,7 +79,7 @@ void UpdateNavigationInputs(GLFWwindow* window, size_t totalObjects, const float
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
         if (!leftArrowPressedLastFrame) {
             currentObjectIndex = (currentObjectIndex - 1 + totalObjects) % totalObjects;
-            radius = objectsCameraDistances[currentObjectIndex]; 
+            radius = objectsList[currentObjectIndex].cameraDistance; 
             leftArrowPressedLastFrame = true;
         }
     } else {
@@ -107,4 +127,50 @@ Mat4 LookAt() {
     res.m[15] = 1.0f;
 
     return res;
+}
+
+
+void RenderNavigationUI(size_t totalObjects, const std::vector<ObjectInfo>& objectsList) {
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, 20.0f), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
+    ImGui::SetNextWindowBgAlpha(0.6f);
+
+    ImGui::Begin("Navigation Objet", nullptr, 
+        ImGuiWindowFlags_NoTitleBar | 
+        ImGuiWindowFlags_NoResize | 
+        ImGuiWindowFlags_AlwaysAutoResize | 
+        ImGuiWindowFlags_NoMove | 
+        ImGuiWindowFlags_NoSavedSettings);
+
+    const ObjectInfo& currentObj = objectsList[currentObjectIndex];
+
+    ImGui::TextDisabled("%s", currentObj.intitule.c_str());
+    ImGui::Separator();
+    
+    ImGui::SetWindowFontScale(1.3f);
+    ImGui::Text("%s", currentObj.titre.c_str());
+    ImGui::SetWindowFontScale(1.0f);
+    
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+  
+    if (ImGui::Button("<##Prev", ImVec2(40, 40))) {
+        currentObjectIndex = (currentObjectIndex - 1 + totalObjects) % totalObjects;
+        radius = objectsList[currentObjectIndex].cameraDistance;
+    }
+    
+    ImGui::SameLine();
+    
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("  %d / %zu  ", currentObjectIndex + 1, totalObjects);
+    
+    ImGui::SameLine();
+    
+    if (ImGui::Button(">##Next", ImVec2(40, 40))) {
+        currentObjectIndex = (currentObjectIndex + 1) % totalObjects;
+        radius = objectsList[currentObjectIndex].cameraDistance;
+    }
+
+    ImGui::End();
 }
