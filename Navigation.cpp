@@ -18,10 +18,11 @@ static bool rightArrowPressedLastFrame = false;
 static bool leftArrowPressedLastFrame = false;
 
 std::vector<ObjectInfo> mesObjets = {
-    {"Vogue Merry", "Going Merry", 50.0f},
-    {"Thousand Sunny", "Thousand Sunny", 60.0f},
-    {"Laboon", "Laboon", 75.0f},
-    {"Kuzan (Aokiji)", "Kuzan", 40.0f}
+    {"Vogue Merry", "Le premier compagnon", 50.0f},
+    {"Thousand Sunny", "Water Seven", 60.0f},
+    {"Laboon", "Baleine Géante", 75.0f},
+    {"Kuzan (Aokiji)", "Amiral de la Marine", 40.0f},
+    {"Baratie", "Navire-Restaurant (Sanji)", 50.0f}
 };
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {

@@ -226,6 +226,7 @@ int main(int argc, char* argv[]) {
 
     AddObjectToScene("./3Dobjects/laboon-one-piece/Laboon_One_Piece.obj", "./3Dobjects/laboon-one-piece/", "shaders/laboon-one-piece/basic.vs.glsl", "shaders/laboon-one-piece/basic.fs.glsl", fov);
     AddObjectToScene("./3Dobjects/one-piece-kuzan/Aokiji.obj", "./3Dobjects/one-piece-kuzan/", "shaders/one-piece-kuzan/basic.vs.glsl", "shaders/one-piece-kuzan/basic.fs.glsl", fov);
+    AddObjectToScene("./3Dobjects/baratie-one-piece/baratie.obj", "./3Dobjects/baratie-one-piece/", "shaders/baratie-one-piece/basic.vs.glsl", "shaders/baratie-one-piece/basic.fs.glsl", fov);
     
     InitSkyboxGeometry();
     g_SkyboxShader.LoadVertexShader("shaders/skybox/skybox.vs.glsl");
@@ -266,8 +267,12 @@ int main(int argc, char* argv[]) {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        std::string displayTitle = "Inconnu";
+        std::string displayTitle = "Inconnu"; 
         std::string displaySubtitle = "";
+        if (currentObjectIndex >= 0 && currentObjectIndex < mesObjets.size()) {
+            displayTitle = mesObjets[currentObjectIndex].titre;
+            displaySubtitle = mesObjets[currentObjectIndex].intitule;
+        }
         ImGui::Begin("Grand Line Dashboard", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
         
         ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Navigation");
@@ -462,7 +467,7 @@ int main(int argc, char* argv[]) {
     for (size_t i = 0; i < sceneObjects.size(); i++) {
         sceneObjects[i].shader.Destroy();
     }
-    
+
     g_SkyboxShader.Destroy(); 
     glDeleteBuffers(1, &g_Camera.UBO);
     glDeleteVertexArrays(1, &skyboxVAO);
