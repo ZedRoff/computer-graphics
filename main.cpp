@@ -336,20 +336,18 @@ int main(int argc, char* argv[]) {
         }
         
 
-        bool usePostProcess = g_EnablePostProcessOverride;
-        if (usePostProcess) {
+     
             glBindFramebuffer(GL_FRAMEBUFFER, g_PostProcessFBO.FBO);
-        } else {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
+       
 
         int displayWidth, displayHeight;
         glfwGetFramebufferSize(window, &displayWidth, &displayHeight);
         glViewport(0, 0, displayWidth, displayHeight);
 
         glEnable(GL_DEPTH_TEST);
+             glDepthFunc(GL_LESS);
         glDepthMask(GL_TRUE);
-
+   glDisable(GL_BLEND);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -439,8 +437,7 @@ Vec3 groundColorIndirect(0.1f * g_LightIntensity, 0.2f * g_LightIntensity, 0.3f 
         glBindVertexArray(0);
         glDepthFunc(GL_LESS);
 
-        if (usePostProcess) 
-        {
+        
             glBindFramebuffer(GL_FRAMEBUFFER, 0); 
             glViewport(0, 0, displayWidth, displayHeight);
 
@@ -451,6 +448,8 @@ Vec3 groundColorIndirect(0.1f * g_LightIntensity, 0.2f * g_LightIntensity, 0.3f 
 
             uint32_t postProgramID = g_PostProcessShader.GetProgram();
             glUseProgram(postProgramID);
+
+        glUniform1i(glGetUniformLocation(postProgramID, "u_EnableEffect"), g_EnablePostProcessOverride ? 1 : 0);
             
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, g_PostProcessFBO.colorTexture); 
@@ -461,7 +460,7 @@ Vec3 groundColorIndirect(0.1f * g_LightIntensity, 0.2f * g_LightIntensity, 0.3f 
 
             glBindVertexArray(0);
             glBindTexture(GL_TEXTURE_2D, 0);
-        }
+        
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, displayWidth, displayHeight);
         ImGui::Render();
