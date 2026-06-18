@@ -185,13 +185,8 @@ int main(int argc, char* argv[]) {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ObjectData& currentObj = sceneObjects[currentObjectIndex];
         std::string displayTitle = "Inconnu";
         std::string displaySubtitle = "";
-        if (currentObjectIndex >= 0 && currentObjectIndex < mesObjets.size()) {
-            displayTitle = mesObjets[currentObjectIndex].titre;
-            displaySubtitle = mesObjets[currentObjectIndex].intitule;
-        }
         ImGui::Begin("Grand Line Dashboard", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
         
         ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Navigation");
@@ -221,6 +216,7 @@ int main(int argc, char* argv[]) {
         ImGui::End();
 
         UpdateNavigationInputs(window, sceneObjects.size(), cameraDistances.data());
+        ObjectData& currentObj = sceneObjects[currentObjectIndex];
 
         if (currentObjectIndex != lastObjectIndex) {
             g_Camera.projectionMatrix = Perspective(fov, aspect, zNear, currentObj.zFar);
