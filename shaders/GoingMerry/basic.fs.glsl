@@ -33,17 +33,15 @@ void main()
 {
     vec3 N = normalize(v_Normal);
 
-   
-    float hemisphereFactor = N.y * 0.5 + 0.5; 
-    vec3 diffuseIndirect = mix(u_GroundColor, u_SkyColor, hemisphereFactor);
-    vec3 ambient = u_material.ambientColor * diffuseIndirect;
-    vec3 L = normalize(u_light.direction);
-
     vec3 baseColor = u_material.diffuseColor;
     if (u_hasTexture == 1) {
         baseColor = texture(u_Texture, v_TexCoords).rgb * u_material.diffuseColor;
     }
 
+    float hemisphereFactor = N.y * 0.5 + 0.5;
+    vec3 diffuseIndirect = mix(u_GroundColor, u_SkyColor, hemisphereFactor) * baseColor;
+
+    vec3 L = normalize(u_light.direction);
     float NdotL = max(dot(N, L), 0.0);
     vec3 diffuseDirect = NdotL * u_light.diffuseColor * baseColor;
 
@@ -55,6 +53,6 @@ void main()
         specularDirect = specFactor * u_light.specularColor * u_material.specularColor;
     }
 
-    vec3 result = ambient + diffuseDirect + specularDirect;
+    vec3 result = diffuseIndirect + diffuseDirect + specularDirect;
     FragColor = vec4(result, 1.0);
 }
