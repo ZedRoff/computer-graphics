@@ -200,6 +200,7 @@ int main(int argc, char* argv[]) {
 
     glewExperimental = GL_TRUE;
     glewInit();
+    glEnable(GL_FRAMEBUFFER_SRGB);
 
     //Config GUI
     IMGUI_CHECKVERSION();
@@ -318,6 +319,7 @@ int main(int argc, char* argv[]) {
 
         Vec3 dynamicLightColor(1.0f, 1.0f, 1.0f);
 
+      
         if (g_LightMode == 1) {
             dynamicLightColor = Vec3(0.1f * g_LightIntensity, 
                                     0.1f * g_LightIntensity, 
@@ -332,6 +334,7 @@ int main(int argc, char* argv[]) {
                                     lightColor.y * g_LightIntensity, 
                                     lightColor.z * g_LightIntensity);
         }
+        
 
         bool usePostProcess = g_EnablePostProcessOverride;
         if (usePostProcess) {
@@ -352,6 +355,7 @@ int main(int argc, char* argv[]) {
 
         uint32_t activeProgramID = currentObj.shader.GetProgram();
         glUseProgram(activeProgramID);
+        
 
         glUniformMatrix4fv(glGetUniformLocation(activeProgramID, "u_Model"), 1, GL_FALSE, &currentObj.modelMatrix.m[0]); 
 
@@ -365,7 +369,10 @@ int main(int argc, char* argv[]) {
         glUniform3f(glGetUniformLocation(activeProgramID, "u_light.diffuseColor"), dynamicLightColor.x, dynamicLightColor.y, dynamicLightColor.z);
         glUniform3f(glGetUniformLocation(activeProgramID, "u_light.specularColor"), dynamicLightColor.x, dynamicLightColor.y, dynamicLightColor.z);
         glUniform3f(glGetUniformLocation(activeProgramID, "u_light.ambientColor"), 0.2f, 0.2f, 0.2f);
-
+Vec3 skyColorIndirect(0.9f * g_LightIntensity, 0.6f * g_LightIntensity, 0.4f * g_LightIntensity);
+Vec3 groundColorIndirect(0.1f * g_LightIntensity, 0.2f * g_LightIntensity, 0.3f * g_LightIntensity);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_SkyColor"), skyColorIndirect.x, skyColorIndirect.y, skyColorIndirect.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_GroundColor"), groundColorIndirect.x, groundColorIndirect.y, groundColorIndirect.z);
 
         glUniform1i(glGetUniformLocation(activeProgramID, "u_Texture"), 0);
 
@@ -374,7 +381,7 @@ int main(int argc, char* argv[]) {
 
             int ambientLoc, diffuseLoc, specularLoc, shininessLoc;
 
-            if (currentObjectIndex == 1) {
+            if (currentObjectIndex == 1 || currentObjectIndex == 0) {
                 ambientLoc  = glGetUniformLocation(activeProgramID, "u_material.ambientColor");
                 diffuseLoc  = glGetUniformLocation(activeProgramID, "u_material.diffuseColor");
                 specularLoc = glGetUniformLocation(activeProgramID, "u_material.specularColor");
@@ -396,6 +403,7 @@ int main(int argc, char* argv[]) {
                     glUniform1i(hasTexLoc, 0);
                     glBindTexture(GL_TEXTURE_2D, 0);
                 }
+                
                 glUniform3f(ambientLoc, currentObj.materials[matID].ambient.x, currentObj.materials[matID].ambient.y, currentObj.materials[matID].ambient.z);
                 glUniform3f(diffuseLoc, currentObj.materials[matID].diffuse.x, currentObj.materials[matID].diffuse.y, currentObj.materials[matID].diffuse.z);
                 glUniform3f(specularLoc, currentObj.materials[matID].specular.x, currentObj.materials[matID].specular.y, currentObj.materials[matID].specular.z);

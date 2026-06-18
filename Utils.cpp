@@ -153,7 +153,7 @@ unsigned int LoadTexture(const std::string& path) {
     int w, h, comp;
     unsigned char* data = stbi_load(path.c_str(), &w, &h, &comp, STBI_rgb_alpha);
     if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
         stbi_image_free(data);
     } else {
