@@ -9,5 +9,6 @@ bool LoadOBJ(const std::string& filename, std::vector<Mesh>& outMeshes, std::vec
 void SetupMeshBuffers(std::vector<Mesh>& meshes);
 void ComputeBoundingBox(const std::vector<Mesh>& meshes, Vec3& outCenter, float& outMaxDim);
 unsigned int LoadTexture(const std::string& path);
+unsigned int LoadCubemap(const std::vector<std::string>& faces);
 
 #endif

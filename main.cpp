@@ -17,6 +17,7 @@
 ViewProj g_Camera;
 extern int currentObjectIndex;
 
+
 struct ObjectData {
     std::string name;
     std::vector<Mesh> meshes;
@@ -32,10 +33,75 @@ FramebufferData g_PostProcessFBO;
 GLShader g_PostProcessShader;
 uint32_t quadVAO = 0, quadVBO = 0;
 
+
+uint32_t skyboxVAO = 0, skyboxVBO = 0;
+uint32_t skyboxTextureID = 0;
+GLShader g_SkyboxShader;
+
 // Paramètres UI
 float g_LightIntensity = 1.0f;
 bool g_EnablePostProcessOverride = false;
-int g_LightMode = 0;                             
+int g_LightMode = 0;            
+
+
+
+
+void InitSkyboxGeometry() {
+    // https://learnopengl.com/code_viewer.php?code=advanced/cubemaps_skybox_data
+    float skyboxVertices[] = {
+    // positions          
+    -1.0f,  1.0f, -1.0f,
+    -1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+    -1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f
+};
+
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBindVertexArray(0);
+}
 
 void InitPostProcess(int width, int height) {
 
@@ -161,6 +227,21 @@ int main(int argc, char* argv[]) {
     AddObjectToScene("./3Dobjects/laboon-one-piece/Laboon_One_Piece.obj", "./3Dobjects/laboon-one-piece/", "shaders/laboon-one-piece/basic.vs.glsl", "shaders/laboon-one-piece/basic.fs.glsl", fov);
     AddObjectToScene("./3Dobjects/one-piece-kuzan/Aokiji.obj", "./3Dobjects/one-piece-kuzan/", "shaders/one-piece-kuzan/basic.vs.glsl", "shaders/one-piece-kuzan/basic.fs.glsl", fov);
     
+    InitSkyboxGeometry();
+    g_SkyboxShader.LoadVertexShader("shaders/skybox/skybox.vs.glsl");
+    g_SkyboxShader.LoadFragmentShader("shaders/skybox/skybox.fs.glsl");
+    g_SkyboxShader.Create();
+
+     std::vector<std::string> skyboxFaces = {
+       "skybox/right.jpg", 
+    "skybox/left.jpg",  
+ "skybox/bottom.jpg", 
+    "skybox/top.jpg",
+    "skybox/front.jpg",  
+    "skybox/back.jpg"
+    };
+    skyboxTextureID = LoadCubemap(skyboxFaces);
+
     Vec3 lightPos(5.0f, 10.0f, 5.0f);
     Vec3 lightColor(1.0f, 1.0f, 1.0f);
 
@@ -326,6 +407,25 @@ int main(int argc, char* argv[]) {
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(currentObj.meshes[i].vertices.size()));
         }
 
+        glDepthFunc(GL_LEQUAL); 
+        uint32_t skyboxProgID = g_SkyboxShader.GetProgram();
+        glUseProgram(skyboxProgID);
+
+        Mat4 skyboxView = g_Camera.viewMatrix;
+        skyboxView.m[12] = 0.0f; skyboxView.m[13] = 0.0f; skyboxView.m[14] = 0.0f; 
+
+        glUniformMatrix4fv(glGetUniformLocation(skyboxProgID, "u_View"), 1, GL_FALSE, &skyboxView.m[0]);
+        glUniformMatrix4fv(glGetUniformLocation(skyboxProgID, "u_Projection"), 1, GL_FALSE, &g_Camera.projectionMatrix.m[0]);
+
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
+        glUniform1i(glGetUniformLocation(skyboxProgID, "u_Skybox"), 0);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS);
+
         if (usePostProcess) 
         {
             glBindFramebuffer(GL_FRAMEBUFFER, 0); 
@@ -362,7 +462,11 @@ int main(int argc, char* argv[]) {
     for (size_t i = 0; i < sceneObjects.size(); i++) {
         sceneObjects[i].shader.Destroy();
     }
+    
+    g_SkyboxShader.Destroy(); 
     glDeleteBuffers(1, &g_Camera.UBO);
+    glDeleteVertexArrays(1, &skyboxVAO);
+    glDeleteBuffers(1, &skyboxVBO);
 
     glfwTerminate();
     return 0;
