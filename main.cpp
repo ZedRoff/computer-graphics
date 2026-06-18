@@ -379,17 +379,10 @@ Vec3 groundColorIndirect(0.1f * g_LightIntensity, 0.2f * g_LightIntensity, 0.3f 
 
             int ambientLoc, diffuseLoc, specularLoc, shininessLoc;
 
-            if (currentObjectIndex == 1 || currentObjectIndex == 0) {
-                ambientLoc  = glGetUniformLocation(activeProgramID, "u_material.ambientColor");
-                diffuseLoc  = glGetUniformLocation(activeProgramID, "u_material.diffuseColor");
-                specularLoc = glGetUniformLocation(activeProgramID, "u_material.specularColor");
-                shininessLoc = glGetUniformLocation(activeProgramID, "u_material.shininess");
-            } else {
-                ambientLoc  = glGetUniformLocation(activeProgramID, "u_ambientColor");
-                diffuseLoc  = glGetUniformLocation(activeProgramID, "u_diffuseColor");
-                specularLoc = glGetUniformLocation(activeProgramID, "u_specularColor");
-                shininessLoc = glGetUniformLocation(activeProgramID, "u_shininess");
-            }
+            ambientLoc   = glGetUniformLocation(activeProgramID, "u_material.ambientColor");
+diffuseLoc   = glGetUniformLocation(activeProgramID, "u_material.diffuseColor");
+specularLoc  = glGetUniformLocation(activeProgramID, "u_material.specularColor");
+shininessLoc = glGetUniformLocation(activeProgramID, "u_material.shininess");
             int hasTexLoc = glGetUniformLocation(activeProgramID, "u_hasTexture");
             glActiveTexture(GL_TEXTURE0);
 
