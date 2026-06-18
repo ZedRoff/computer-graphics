@@ -17,6 +17,13 @@ static bool firstMouse = true;
 static bool rightArrowPressedLastFrame = false;
 static bool leftArrowPressedLastFrame = false;
 
+std::vector<ObjectInfo> mesObjets = {
+    {"Vogue Merry", "Going Merry", 50.0f},
+    {"Thousand Sunny", "Thousand Sunny", 60.0f},
+    {"Laboon", "Laboon", 75.0f},
+    {"Kuzan (Aokiji)", "Kuzan", 40.0f}
+};
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     if (ImGui::GetIO().WantCaptureMouse) {
         firstMouse = true;

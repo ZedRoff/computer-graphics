@@ -15,6 +15,7 @@
 #include "imgui/imgui_impl_opengl3.h"
 
 ViewProj g_Camera;
+extern int currentObjectIndex;
 
 struct ObjectData {
     std::string name;
@@ -197,7 +198,7 @@ int main(int argc, char* argv[]) {
         ImGui::Text("Objet Actuel : %s (%s)", displayTitle.c_str(), displaySubtitle.c_str());
         ImGui::Text("Index : %d", currentObjectIndex);
         if (ImGui::Button("Précédent")) {
-            currentObjectIndex = (currentObjectIndex - 1 + sceneObjects.size()) % sceneObjects.size();
+            currentObjectIndex = (currentObjectIndex == 0) ? (sceneObjects.size() - 1) : (currentObjectIndex - 1);            
             radius = cameraDistances[currentObjectIndex];
         }
         ImGui::SameLine();

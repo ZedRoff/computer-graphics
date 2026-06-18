@@ -10,12 +10,7 @@ struct ObjectInfo {
     std::string titre;    
     float cameraDistance; 
 };
-extern std::vector<ObjectInfo> mesObjets = {
-    {"Vogue Merry", "Going Merry", 50.0f},
-    {"Thousand Sunny", "Thousand Sunny", 60.0f},
-    {"Laboon", "Laboon", 75.0f},
-    {"Kuzan (Aokiji)", "Kuzan", 40.0f}
-};
+extern std::vector<ObjectInfo> mesObjets;
 extern int currentObjectIndex;
 extern float radius;
 
