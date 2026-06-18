@@ -8,7 +8,7 @@ all: compile run
 
 compile:
 	@mkdir -p bin
-	$(CC) $(CFLAGS) main.cpp Utils.cpp Navigation.cpp Maths.cpp common/GLShader.cpp common/tiny_obj_loader.cc imgui/imgui.cpp -o bin/projet $(LDFLAGS)
+	$(CC) $(CFLAGS) -I. main.cpp Utils.cpp Navigation.cpp Maths.cpp common/GLShader.cpp common/tiny_obj_loader.cc imgui/imgui.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp imgui/imgui_tables.cpp imgui/imgui_impl_glfw.cpp imgui/imgui_impl_opengl3.cpp -o bin/projet $(LDFLAGS)
 
 run:
 	./bin/projet

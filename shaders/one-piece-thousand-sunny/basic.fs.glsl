@@ -16,6 +16,7 @@ struct Material {
     vec3 diffuseColor; 
     vec3 specularColor;
     float shininess;   
+};
 
 uniform Light u_light;
 uniform Material u_material;

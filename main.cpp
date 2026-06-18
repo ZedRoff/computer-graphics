@@ -10,6 +10,10 @@
 #include "common/GLShader.h"
 #include "Navigation.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
+
 ViewProj g_Camera;
 
 struct ObjectData {
@@ -124,6 +128,14 @@ int main(int argc, char* argv[]) {
     glewExperimental = GL_TRUE;
     glewInit();
 
+    //Config GUI
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 150");
+
     glEnable(GL_DEPTH_TEST);
 
     float fov = M_PI / 4.0f;
@@ -148,7 +160,9 @@ int main(int argc, char* argv[]) {
     int lastObjectIndex = -1; 
     radius = sceneObjects[0].cameraDistance; 
 
-    InitPostProcess(800, 600);
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    InitPostProcess(fbWidth, fbHeight);
     g_PostProcessShader.LoadVertexShader("shaders/postprocess/postprocess.vs.glsl");
     g_PostProcessShader.LoadFragmentShader("shaders/postprocess/postprocess.fs.glsl");
     g_PostProcessShader.Create();
@@ -160,6 +174,14 @@ int main(int argc, char* argv[]) {
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::Begin("Navigation");
+        ImGui::Text("Objet Actuel : %d", currentObjectIndex);
+        ImGui::End();
 
         UpdateNavigationInputs(window, sceneObjects.size(), cameraDistances.data());
 
@@ -182,7 +204,9 @@ int main(int argc, char* argv[]) {
         } else {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
-        glViewport(0, 0, 800, 600); 
+        int displayWidth, displayHeight;
+        glfwGetFramebufferSize(window, &displayWidth, &displayHeight);
+        glViewport(0, 0, displayWidth, displayHeight);
 
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
@@ -255,7 +279,7 @@ int main(int argc, char* argv[]) {
         if (currentObjectIndex == 0) 
         {
             glBindFramebuffer(GL_FRAMEBUFFER, 0); 
-            glViewport(0, 0, 800, 600);
+            glViewport(0, 0, displayWidth, displayHeight);
 
             glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
@@ -275,7 +299,10 @@ int main(int argc, char* argv[]) {
             glBindVertexArray(0);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
-
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, displayWidth, displayHeight);
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
 

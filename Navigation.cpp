@@ -1,6 +1,6 @@
 #include "Navigation.h"
 #include <cmath>
-#include "imgui.h" 
+#include "imgui/imgui.h" 
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <string>
@@ -63,13 +63,11 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     radius -= (float)yoffset * 0.5f; 
 }
 
-void UpdateNavigationInputs(GLFWwindow* window, size_t totalObjects, const std::vector<ObjectInfo>& objectsList) {
-    if (ImGui::GetIO().WantCaptureKeyboard) return;
-
+void UpdateNavigationInputs(GLFWwindow* window, size_t totalObjects, const float* objectsCameraDistances) {
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         if (!rightArrowPressedLastFrame) {
             currentObjectIndex = (currentObjectIndex + 1) % totalObjects;
-            radius = objectsList[currentObjectIndex].cameraDistance; 
+            radius = objectsCameraDistances[currentObjectIndex]; 
             rightArrowPressedLastFrame = true;
         }
     } else {
@@ -79,7 +77,7 @@ void UpdateNavigationInputs(GLFWwindow* window, size_t totalObjects, const std::
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
         if (!leftArrowPressedLastFrame) {
             currentObjectIndex = (currentObjectIndex - 1 + totalObjects) % totalObjects;
-            radius = objectsList[currentObjectIndex].cameraDistance; 
+            radius = objectsCameraDistances[currentObjectIndex]; 
             leftArrowPressedLastFrame = true;
         }
     } else {
