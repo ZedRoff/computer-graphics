@@ -6,7 +6,8 @@
 
 ### Auteurs
 * **Justine** (E4FI)
-* **Aman** (E4FI) - Groupe 1I
+* **Aman** (E4FI) 
+* **E4FI- Groupe 1I**
 
 ## Fonctionnalités Principales (Features)
 
@@ -83,7 +84,7 @@ Le projet s'appuie sur les bibliothèques standards de OpenGL pour l'affichage e
 
 ---
 
-## ⚙️ Installation et Compilation
+## Installation et Compilation
 
 Grâce au `Makefile` configuré à la racine du projet, la compilation et le lancement de l'application sont entièrement automatisés. Le script se charge également de détecter automatiquement vos dossiers d'inclusion (notamment pour les utilisateurs de macOS via Homebrew).
 
