@@ -27,6 +27,26 @@ L'application intègre plusieurs techniques avancées combinant la gestion de la
     * **Grand Line Dashboard :** Panneau de contrôle complet permettant de basculer d'un objet à un autre en un clic, d'ajuster dynamiquement l'intensité de la source lumineuse globale ou d'appliquer les effets sur l'objet 3D.
     * **HUD de Navigation :** Fenêtre personnalisée en haut de l'écran affichant l'intitulé exact de l'entité 3D visionnée ainsi qu'un système de pagination fluide.
 
+* **Gestion de l'Éclairage (Phong + Illumination Indirecte)**
+    * Calcul des réflexions en temps réel dans les Shaders de Fragment à l'aide de la position de la caméra et d'une source de lumière directionnelle.
+    * **Équation d'illumination complète :** Le rendu respecte la décomposition suivante :
+        ```
+        Couleur Finale = DiffuseIndirect + SpeculaireIndirect
+                       + ForEach_LumièreDirecte(DiffuseDirect + SpeculaireDirect)
+        ```
+    * **Illumination Indirecte — Ambiante Hémisphérique (Diffuse Indirecte) :**
+        * Remplacement de la constante ambiante plate par un modèle hémisphérique physiquement plus crédible.
+        * La contribution indirecte est interpolée entre une couleur de **sol** (chaude) et une couleur de **ciel** (froide) selon l'orientation de la normale du fragment par rapport à l'axe vertical (`N.y`) :
+            ```glsl
+            float hemisphereFactor = N.y * 0.5 + 0.5;
+            vec3 diffuseIndirect = mix(u_GroundColor, u_SkyColor, hemisphereFactor) * baseColor;
+            ```
+        * Les deux couleurs hémisphériques (`u_SkyColor`, `u_GroundColor`) sont envoyées depuis le CPU et modulées par l'intensité lumineuse globale (`g_LightIntensity`).
+    * **3 Modes d'Ambiance programmés :**
+        * *Soleil de l'Aube :* Éclairage standard d'un blanc neutre et équilibré, idéal pour inspecter les détails des modèles.
+        * *Nuit Profonde :* Ambiance nocturne tamisée aux teintes bleutées sombres.
+        * *Disco Punk-Hazard :* Éclairage festif et dynamique dont les composantes chromatiques (Rouge, Vert, Bleu) oscillent continuellement en fonction du temps (`glfwGetTime()`). *Une ambiance digne du laboratoire de Caesar Clown.*
+
 * **Gestion de l'Éclairage (Blinn-Phong)**
     * Calcul des réflections en temps réel dans les Shaders de Fragment à l'aide de la position de la caméra et d'une source de lumière positionnelle.
     * **3 Modes d'Ambiance programmés :**
@@ -47,7 +67,14 @@ COMPUTER-GRAPHICS/
 ├── bin/                  # Dossier des binaires et exécutables générés
 ├── common/               # Utilitaires partagés (ex: GLShader.h pour compiler les shaders)
 ├── imgui/                # Bibliothèque Dear ImGui pour l'interface graphique
-├── shaders/              # Codes sources GLSL (Vertex, Fragment et Post-process)
+├── shaders/              # Codes sources GLSL (Vertex, Fragment, Skybox et Post-process)
+│   ├── GoingMerry/       # Shader Phong + ambiante hémisphérique (u_SkyColor / u_GroundColor)
+│   ├── one-piece-thousand-sunny/
+│   ├── laboon-one-piece/
+│   ├── one-piece-kuzan/
+│   ├── baratie-one-piece/
+│   ├── skybox/           # Shader dédié au rendu du cubemap
+│   └── postprocess/      # Shader de post-processing sur quad
 │
 ├── main.cpp              # Point d'entrée, boucle de rendu principale, FBO et éclairage
 ├── Makefile              # Script de compilation automatisé pour le projet
@@ -60,6 +87,26 @@ COMPUTER-GRAPHICS/
 ├── imgui.ini             # Sauvegarde de la disposition des fenêtres ImGui
 └── readme.md             # Documentation du projet
 ```
+
+## Référence des Uniforms GLSL (Fragment Shader)
+
+Tous les shaders d'objets partagent la même interface d'uniforms :
+
+| Uniform | Type | Description |
+| :--- | :--- | :--- |
+| `u_material.diffuseColor` | `vec3` | Couleur diffuse du matériau (depuis le `.mtl`) |
+| `u_material.specularColor` | `vec3` | Couleur spéculaire du matériau |
+| `u_material.shininess` | `float` | Exposant de brillance Phong |
+| `u_light.direction` | `vec3` | Direction de la source de lumière directe |
+| `u_light.diffuseColor` | `vec3` | Couleur/intensité de la lumière directe diffuse |
+| `u_light.specularColor` | `vec3` | Couleur/intensité de la lumière directe spéculaire |
+| `u_SkyColor` | `vec3` | Couleur hémisphérique venant du ciel (lumière indirecte haute) |
+| `u_GroundColor` | `vec3` | Couleur hémisphérique venant du sol (lumière indirecte basse) |
+| `u_viewPos` | `vec3` | Position de la caméra (espace monde) |
+| `u_hasTexture` | `int` | `1` si une texture diffuse est liée, `0` sinon |
+| `u_Texture` | `sampler2D` | Texture diffuse de l'objet |
+
+---
 
 ## Dépendances & Prérequis
 
