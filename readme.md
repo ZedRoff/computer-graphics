@@ -134,11 +134,22 @@ Pour interagir avec le visualiseur 3D et explorer les modèles sous tous les ang
 
 Voici un aperçu du rendu en temps réel de l'application avec ses différents modes et modèles :
 
-![Vogue Merry - Rendu Standard]()
-*Le Vogue Merry affiché*
+![Vogue Merry - Illumination indirecte]()
+*Le Vogue Merry affiché (avec ombrage illumination indirecte)*
+![alt text](screenshots/illum_indirecte.png)
 
 ![Thousand Sunny - Mode Disco]()
 *L'ambiance chromatique dynamique "Disco Punk-Hazard" appliquée sur le Thousand Sunny.*
+![alt text](screenshots/disco.png)
 
 ![Pipeline de Post-Processing]()
 *Effet de rendu activé via le shader de Post-Processing et le Framebuffer (FBO).*
+![alt text](screenshots/postprocess.png)
+
+![Nuit profonde]()
+
+![alt text](screenshots/nuit_profonde.png)
+
+![Phong]()
+
+![alt text](screenshots/phong.png)
