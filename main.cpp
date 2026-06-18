@@ -16,13 +16,6 @@
 
 ViewProj g_Camera;
 
-struct ObjectInfo {
-    std::string intitule;
-    std::string titre;    
-    float cameraDistance; 
-};
-extern std::vector<ObjectInfo> mesObjets;
-
 struct ObjectData {
     std::string name;
     std::vector<Mesh> meshes;
@@ -223,7 +216,7 @@ int main(int argc, char* argv[]) {
 
         ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Effets Spéciaux");
         ImGui::Checkbox("Activer le Post-Process", &g_EnablePostProcessOverride);
-        
+
         ImGui::End();
 
         UpdateNavigationInputs(window, sceneObjects.size(), cameraDistances.data());

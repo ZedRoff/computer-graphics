@@ -3,7 +3,19 @@
 
 #include <GLFW/glfw3.h>
 #include "Maths.h"
+#include <string>
 
+struct ObjectInfo {
+    std::string intitule;
+    std::string titre;    
+    float cameraDistance; 
+};
+extern std::vector<ObjectInfo> mesObjets = {
+    {"Vogue Merry", "Going Merry", 50.0f},
+    {"Thousand Sunny", "Thousand Sunny", 60.0f},
+    {"Laboon", "Laboon", 75.0f},
+    {"Kuzan (Aokiji)", "Kuzan", 40.0f}
+};
 extern int currentObjectIndex;
 extern float radius;
 
