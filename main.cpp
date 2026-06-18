@@ -16,7 +16,15 @@
 
 ViewProj g_Camera;
 
+struct ObjectInfo {
+    std::string intitule;
+    std::string titre;    
+    float cameraDistance; 
+};
+extern std::vector<ObjectInfo> mesObjets;
+
 struct ObjectData {
+    std::string name;
     std::vector<Mesh> meshes;
     std::vector<Material> materials;
     Mat4 modelMatrix; 
@@ -29,6 +37,11 @@ std::vector<ObjectData> sceneObjects;
 FramebufferData g_PostProcessFBO;
 GLShader g_PostProcessShader;
 uint32_t quadVAO = 0, quadVBO = 0;
+
+// Paramètres UI
+float g_LightIntensity = 1.0f;
+bool g_EnablePostProcessOverride = false;
+int g_LightMode = 0;                             
 
 void InitPostProcess(int width, int height) {
 
@@ -178,14 +191,42 @@ int main(int argc, char* argv[]) {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        ObjectData& currentObj = sceneObjects[currentObjectIndex];
+        std::string displayTitle = "Inconnu";
+        std::string displaySubtitle = "";
+        if (currentObjectIndex >= 0 && currentObjectIndex < mesObjets.size()) {
+            displayTitle = mesObjets[currentObjectIndex].titre;
+            displaySubtitle = mesObjets[currentObjectIndex].intitule;
+        }
+        ImGui::Begin("Grand Line Dashboard", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        
+        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Navigation");
+        ImGui::Text("Objet Actuel : %s (%s)", displayTitle.c_str(), displaySubtitle.c_str());
+        ImGui::Text("Index : %d", currentObjectIndex);
+        if (ImGui::Button("Précédent")) {
+            currentObjectIndex = (currentObjectIndex - 1 + sceneObjects.size()) % sceneObjects.size();
+            radius = cameraDistances[currentObjectIndex];
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Suivant")) {
+            currentObjectIndex = (currentObjectIndex + 1) % sceneObjects.size();
+            radius = cameraDistances[currentObjectIndex];
+        }
 
-        ImGui::Begin("Navigation");
-        ImGui::Text("Objet Actuel : %d", currentObjectIndex);
+        ImGui::Separator();
+
+        ImGui::TextColored(ImVec4(0.0f, 0.8f, 1.0f, 1.0f), "Ambiance & Lumières");
+        ImGui::SliderFloat("Intensité", &g_LightIntensity, 0.0f, 3.0f);
+        ImGui::Combo("Mode Lumineux", &g_LightMode, "Soleil de l'Aube\0Nuit Profonde\0Disco Punk-Hazard\0");
+
+        ImGui::Separator();
+
+        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Effets Spéciaux");
+        ImGui::Checkbox("Activer le Post-Process", &g_EnablePostProcessOverride);
+        
         ImGui::End();
 
         UpdateNavigationInputs(window, sceneObjects.size(), cameraDistances.data());
-
-        ObjectData& currentObj = sceneObjects[currentObjectIndex];
 
         if (currentObjectIndex != lastObjectIndex) {
             g_Camera.projectionMatrix = Perspective(fov, aspect, zNear, currentObj.zFar);
@@ -199,11 +240,30 @@ int main(int argc, char* argv[]) {
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(Mat4), sizeof(Mat4), &g_Camera.projectionMatrix);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        if (currentObjectIndex == 0) {
+        Vec3 dynamicLightColor(1.0f, 1.0f, 1.0f);
+
+        if (g_LightMode == 1) {
+            dynamicLightColor = Vec3(0.1f * g_LightIntensity, 
+                                    0.1f * g_LightIntensity, 
+                                    0.3f * g_LightIntensity);
+        } else if (g_LightMode == 2) {
+            float r = (std::sin(glfwGetTime() * 5.0f) * 0.5f + 0.5f) * g_LightIntensity;
+            float g = (std::cos(glfwGetTime() * 3.0f) * 0.5f + 0.5f) * g_LightIntensity;
+            float b = 1.0f * g_LightIntensity;
+            dynamicLightColor = Vec3(r, g, b);
+        } else {
+            dynamicLightColor = Vec3(lightColor.x * g_LightIntensity, 
+                                    lightColor.y * g_LightIntensity, 
+                                    lightColor.z * g_LightIntensity);
+        }
+
+        bool usePostProcess = g_EnablePostProcessOverride;
+        if (usePostProcess) {
             glBindFramebuffer(GL_FRAMEBUFFER, g_PostProcessFBO.FBO);
         } else {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
+
         int displayWidth, displayHeight;
         glfwGetFramebufferSize(window, &displayWidth, &displayHeight);
         glViewport(0, 0, displayWidth, displayHeight);
@@ -223,11 +283,11 @@ int main(int argc, char* argv[]) {
 
         glUniform3f(glGetUniformLocation(activeProgramID, "u_lightPos"), lightPos.x, lightPos.y, lightPos.z);
         glUniform3f(glGetUniformLocation(activeProgramID, "u_viewPos"), camPos.x, camPos.y, camPos.z);
-        glUniform3f(glGetUniformLocation(activeProgramID, "u_lightColor"), lightColor.x, lightColor.y, lightColor.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_lightColor"), dynamicLightColor.x, dynamicLightColor.y, dynamicLightColor.z);
 
         glUniform3f(glGetUniformLocation(activeProgramID, "u_light.direction"), lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(glGetUniformLocation(activeProgramID, "u_light.diffuseColor"), lightColor.x, lightColor.y, lightColor.z);
-        glUniform3f(glGetUniformLocation(activeProgramID, "u_light.specularColor"), lightColor.x, lightColor.y, lightColor.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_light.diffuseColor"), dynamicLightColor.x, dynamicLightColor.y, dynamicLightColor.z);
+        glUniform3f(glGetUniformLocation(activeProgramID, "u_light.specularColor"), dynamicLightColor.x, dynamicLightColor.y, dynamicLightColor.z);
         glUniform3f(glGetUniformLocation(activeProgramID, "u_light.ambientColor"), 0.2f, 0.2f, 0.2f);
 
 
@@ -276,7 +336,7 @@ int main(int argc, char* argv[]) {
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(currentObj.meshes[i].vertices.size()));
         }
 
-        if (currentObjectIndex == 0) 
+        if (usePostProcess) 
         {
             glBindFramebuffer(GL_FRAMEBUFFER, 0); 
             glViewport(0, 0, displayWidth, displayHeight);

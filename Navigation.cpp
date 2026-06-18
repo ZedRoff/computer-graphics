@@ -24,7 +24,10 @@ struct ObjectInfo {
 };
 
 std::vector<ObjectInfo> mesObjets = {
-    {"Vogue Merry", "Vogue Merry", 50.0f}
+    {"Vogue Merry", "Going Merry", 50.0f},
+    {"Thousand Sunny", "Thousand Sunny", 60.0f},
+    {"Laboon", "Laboon", 75.0f},
+    {"Kuzan (Aokiji)", "Kuzan", 40.0f}
 };
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -125,50 +128,4 @@ Mat4 LookAt() {
     res.m[15] = 1.0f;
 
     return res;
-}
-
-
-void RenderNavigationUI(size_t totalObjects, const std::vector<ObjectInfo>& objectsList) {
-    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, 20.0f), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
-    ImGui::SetNextWindowBgAlpha(0.6f);
-
-    ImGui::Begin("Navigation Objet", nullptr, 
-        ImGuiWindowFlags_NoTitleBar | 
-        ImGuiWindowFlags_NoResize | 
-        ImGuiWindowFlags_AlwaysAutoResize | 
-        ImGuiWindowFlags_NoMove | 
-        ImGuiWindowFlags_NoSavedSettings);
-
-    const ObjectInfo& currentObj = objectsList[currentObjectIndex];
-
-    ImGui::TextDisabled("%s", currentObj.intitule.c_str());
-    ImGui::Separator();
-    
-    ImGui::SetWindowFontScale(1.3f);
-    ImGui::Text("%s", currentObj.titre.c_str());
-    ImGui::SetWindowFontScale(1.0f);
-    
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
-  
-    if (ImGui::Button("<##Prev", ImVec2(40, 40))) {
-        currentObjectIndex = (currentObjectIndex - 1 + totalObjects) % totalObjects;
-        radius = objectsList[currentObjectIndex].cameraDistance;
-    }
-    
-    ImGui::SameLine();
-    
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("  %d / %zu  ", currentObjectIndex + 1, totalObjects);
-    
-    ImGui::SameLine();
-    
-    if (ImGui::Button(">##Next", ImVec2(40, 40))) {
-        currentObjectIndex = (currentObjectIndex + 1) % totalObjects;
-        radius = objectsList[currentObjectIndex].cameraDistance;
-    }
-
-    ImGui::End();
 }
